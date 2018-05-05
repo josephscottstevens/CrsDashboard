@@ -1,6 +1,6 @@
 module Main exposing (main)
 
-import Common.Table as Table
+import Common.Table as Table exposing (ColumnStyle(CustomStyle, Width))
 import Html exposing (Html, div, h1, input, text)
 import Html.Attributes exposing (placeholder)
 import Html.Events exposing (onInput)
@@ -74,10 +74,10 @@ gridConfig =
     , toolbar = []
     , toMsg = SetTableState
     , columns =
-        [ Table.stringColumn "Name" .name
-        , Table.intColumn "Year" .year
-        , Table.stringColumn "City" .city
-        , Table.stringColumn "State" .state
+        [ Table.stringColumn "Name" .name (Width 1)
+        , Table.intColumn "Year" .year (Width 1)
+        , Table.stringColumn "City" .city (Width 1)
+        , Table.stringColumn "State" .state (Width 1)
         ]
     }
 

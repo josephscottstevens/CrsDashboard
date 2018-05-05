@@ -1,6 +1,7 @@
 module Common.Table
     exposing
         ( Column
+        , ColumnStyle(..)
         , Config
         , State
         , checkColumn
