@@ -7,8 +7,8 @@ module Common.Table
         , checkColumn
         , dateColumn
         , dateTimeColumn
-          -- , hrefColumn
-          -- , htmlColumn
+        , hrefColumn
+        , htmlColumn
         , init
         , intColumn
         , stringColumn
@@ -19,7 +19,6 @@ import Common.Functions as Functions
 import Html exposing (Html, a, button, div, input, li, span, table, tbody, td, text, th, thead, tr, ul)
 import Html.Attributes exposing (checked, class, classList, colspan, disabled, href, id, style, target, type_)
 import Html.Events as Events
-import Json.Encode as Encode
 
 
 -- Data Types
@@ -111,14 +110,13 @@ dateTimeColumn name data columnStyle dataField =
     }
 
 
-
--- hrefColumn : String -> ({ data | id : Int } -> ( Maybe String, String )) -> ColumnStyle -> Sorter { data | id : Int } -> Column data msg
--- hrefColumn name data columnStyle sorter =
---     { name = name
---     , viewData = data >> viewHrefColumn
---     , columnStyle = columnStyle
---     , sorter = sorter
---     }
+hrefColumn : String -> ({ data | id : Int } -> ( Maybe String, String )) -> ColumnStyle -> ({ data | id : Int } -> comparable) -> Column data msg
+hrefColumn name data columnStyle toComparable =
+    { name = name
+    , viewData = data >> viewHrefColumn
+    , columnStyle = columnStyle
+    , sorter = IncOrDec (List.sortBy toComparable)
+    }
 
 
 viewHrefColumn : ( Maybe String, String ) -> Html msg
@@ -145,14 +143,13 @@ viewCheckColumn isChecked =
         ]
 
 
-
--- htmlColumn : String -> ({ data | id : Int } -> Html msg) -> ColumnStyle -> Sorter { data | id : Int } -> Column data msg
--- htmlColumn name data columnStyle sorter =
---     { name = name
---     , viewData = data
---     , columnStyle = columnStyle
---     , sorter = sorter
---     }
+htmlColumn : String -> ({ data | id : Int } -> Html msg) -> ColumnStyle -> ({ data | id : Int } -> comparable) -> Column data msg
+htmlColumn name data columnStyle toComparable =
+    { name = name
+    , viewData = data
+    , columnStyle = columnStyle
+    , sorter = IncOrDec (List.sortBy toComparable)
+    }
 
 
 type alias Config data msg =
