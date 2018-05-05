@@ -79,10 +79,10 @@ type alias Column data msg =
     }
 
 
-intColumn : String -> ({ data | content_id : Int } -> Int) -> ColumnStyle -> Column data msg
+intColumn : String -> ({ data | content_id : Int } -> Maybe Int) -> ColumnStyle -> Column data msg
 intColumn name data columnStyle =
     { name = name
-    , viewData = data >> (\t -> text (toString t))
+    , viewData = data >> (\t -> text (Functions.defaultIntToString t))
     , columnStyle = columnStyle
     , sorter = intSort data
     }
@@ -550,9 +550,9 @@ defaultSort t =
     increasingOrDecreasingBy (Functions.defaultString << t)
 
 
-intSort : ({ data | content_id : Int } -> Int) -> Sorter data
+intSort : ({ data | content_id : Int } -> Maybe Int) -> Sorter data
 intSort t =
-    increasingOrDecreasingBy (toString << t)
+    increasingOrDecreasingBy (Functions.defaultIntToString << t)
 
 
 defaultBoolSort : ({ data | content_id : Int } -> Bool) -> Sorter data
