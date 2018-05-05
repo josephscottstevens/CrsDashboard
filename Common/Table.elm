@@ -34,7 +34,7 @@ init sortedColumnName =
     { selectedId = Nothing
     , openDropdownId = Nothing
     , pageIndex = 0
-    , rowsPerPage = Exactly 50
+    , rowsPerPage = All
     , sortField = sortedColumnName
     , sortAscending = True
     }
@@ -208,42 +208,42 @@ view state rows config maybeCustomRow =
         totalRows =
             List.length rows
     in
-    div [ id "searchResultsTable_wrapper" ]
-        [ div [ class "top" ]
-            [ div [ class "dataTables_length", id "searchResultsTable_length" ]
-                [ label []
-                    [ text "Show"
-                    , select [ id "pageLengthSelect" ]
-                        [ option [ value "50", Events.onClick (config.toMsg { state | rowsPerPage = Exactly 50 }) ] [ text "50" ]
-                        , option [ value "100", Events.onClick (config.toMsg { state | rowsPerPage = Exactly 100 }) ] [ text "100" ]
-                        , option [ value "150", Events.onClick (config.toMsg { state | rowsPerPage = Exactly 150 }) ] [ text "150" ]
-                        , option [ value "200", Events.onClick (config.toMsg { state | rowsPerPage = Exactly 200 }) ] [ text "200" ]
-                        , option [ value "-1", Events.onClick (config.toMsg { state | rowsPerPage = All }) ] [ text "All" ]
+        div [ id "searchResultsTable_wrapper" ]
+            [ div [ class "top" ]
+                [ div [ class "dataTables_length", id "searchResultsTable_length" ]
+                    [ label []
+                        [ text "Show"
+                        , select [ id "pageLengthSelect" ]
+                            [ option [ value "50", Events.onClick (config.toMsg { state | rowsPerPage = Exactly 50 }) ] [ text "50" ]
+                            , option [ value "100", Events.onClick (config.toMsg { state | rowsPerPage = Exactly 100 }) ] [ text "100" ]
+                            , option [ value "150", Events.onClick (config.toMsg { state | rowsPerPage = Exactly 150 }) ] [ text "150" ]
+                            , option [ value "200", Events.onClick (config.toMsg { state | rowsPerPage = Exactly 200 }) ] [ text "200" ]
+                            , option [ value "-1", Events.onClick (config.toMsg { state | rowsPerPage = All }) ] [ text "All" ]
+                            ]
                         ]
                     ]
+                , pagingView state totalRows filteredRows config.toMsg
                 ]
-            , pagingView state totalRows filteredRows config.toMsg
-            ]
-        , table
-            [ cellspacing "0"
-            , cellpadding "0"
-            , border "0"
-            , class "display dataTable no-footer"
-            , id config.domTableId
-            , style [ ( "width", "100%" ) ]
-            ]
-            [ thead []
-                [ tr [] (List.map (viewTh state config) config.columns)
+            , table
+                [ cellspacing "0"
+                , cellpadding "0"
+                , border "0"
+                , class "display dataTable no-footer"
+                , id config.domTableId
+                , style [ ( "width", "100%" ) ]
                 ]
-            , tbody []
-                (viewTr state filteredRows config maybeCustomRow)
+                [ thead []
+                    [ tr [] (List.map (viewTh state config) config.columns)
+                    ]
+                , tbody []
+                    (viewTr state filteredRows config maybeCustomRow)
+                ]
+            , div [ class "bottom" ]
+                [ div [ class "dataTables_info", id "searchResultsTable_info" ] [ text (pagerText state totalRows) ]
+                , pagingView state totalRows filteredRows config.toMsg
+                ]
+            , div [ class "clear" ] []
             ]
-        , div [ class "bottom" ]
-            [ div [ class "dataTables_info", id "searchResultsTable_info" ] [ text (pagerText state totalRows) ]
-            , pagingView state totalRows filteredRows config.toMsg
-            ]
-        , div [ class "clear" ] []
-        ]
 
 
 viewTr : State -> List { data | content_id : Int } -> Config { data | content_id : Int } msg -> Maybe (Html msg) -> List (Html msg)
@@ -292,23 +292,23 @@ viewTr state rows config maybeCustomRow =
                 , ( "margin-left", "5px" )
                 ]
     in
-    case maybeCustomRow of
-        Just customRow ->
-            tr [ customRowStyle ]
-                [ td [ colspan (List.length config.columns), customCellStyle ]
-                    [ customRow
+        case maybeCustomRow of
+            Just customRow ->
+                tr [ customRowStyle ]
+                    [ td [ colspan (List.length config.columns), customCellStyle ]
+                        [ customRow
+                        ]
                     ]
-                ]
-                :: List.indexedMap standardTr rows
+                    :: List.indexedMap standardTr rows
 
-        Nothing ->
-            if List.length rows == 0 then
-                [ tr []
-                    [ td [] [ text "No records to display" ]
+            Nothing ->
+                if List.length rows == 0 then
+                    [ tr []
+                        [ td [] [ text "No records to display" ]
+                        ]
                     ]
-                ]
-            else
-                List.indexedMap standardTr rows
+                else
+                    List.indexedMap standardTr rows
 
 
 columnStyle : { data | columnStyle : ColumnStyle } -> Html.Attribute msg
@@ -339,15 +339,15 @@ viewTh state config column =
         sortClick =
             Events.onClick (config.toMsg { state | sortAscending = not state.sortAscending, sortField = column.name })
     in
-    th
-        [ thClass
-        , sortClick
-        , columnStyle column
-        , rowspan 1
-        , colspan 1
-        ]
-        [ text column.name
-        ]
+        th
+            [ thClass
+            , sortClick
+            , columnStyle column
+            , rowspan 1
+            , colspan 1
+            ]
+            [ text column.name
+            ]
 
 
 viewTd : State -> { data | content_id : Int } -> Config { data | content_id : Int } msg -> Column { data | content_id : Int } msg -> Html msg
@@ -413,7 +413,7 @@ setPagingState state totalRows toMsg page =
                 Last ->
                     lastIndex
     in
-    Events.onClick (toMsg { state | pageIndex = newIndex })
+        Events.onClick (toMsg { state | pageIndex = newIndex })
 
 
 pagerText : State -> Int -> String
@@ -434,15 +434,31 @@ pagerText state totalRows =
 
         totalItemsText =
             toString totalRows
+
+        totalPageItems t =
+            if (state.pageIndex + 1) * t > totalRows then
+                totalRows
+            else
+                (state.pageIndex + 1) * t
     in
-    "Showing " ++ currentPageText ++ " to " ++ totalItemsText ++ " of " ++ totalPagesText ++ " entries"
+        case state.rowsPerPage of
+            Exactly t ->
+                "Showing " ++ toString (state.pageIndex * t + 1) ++ " to " ++ toString (totalPageItems t) ++ " of " ++ totalItemsText ++ " entries"
+
+            All ->
+                "Showing " ++ currentPageText ++ " to " ++ totalItemsText ++ " of " ++ totalPagesText ++ " entries"
 
 
 pagingView : State -> Int -> List { data | content_id : Int } -> (State -> msg) -> Html msg
 pagingView state totalRows rows toMsg =
     let
         lastIndex =
-            getLastIndex totalRows state.rowsPerPage
+            case state.rowsPerPage of
+                Exactly t ->
+                    totalRows // t
+
+                All ->
+                    0
 
         pagingStateClick page =
             setPagingState state totalRows toMsg page
@@ -455,11 +471,11 @@ pagingView state totalRows rows toMsg =
                     else
                         "paginate_button"
             in
-            a
-                [ class activeOrNotText
-                , pagingStateClick (Index pageIndex)
-                ]
-                [ text (toString (pageIndex + 1)) ]
+                a
+                    [ class activeOrNotText
+                    , pagingStateClick (Index pageIndex)
+                    ]
+                    [ text (toString (pageIndex + 1)) ]
 
         rng =
             List.range 0 lastIndex
@@ -491,13 +507,13 @@ pagingView state totalRows rows toMsg =
             else
                 "paginate_button last disabled"
     in
-    div [ class "dataTables_paginate paging_full_numbers" ]
-        [ a [ class firstPageClass, pagingStateClick First ] []
-        , a [ class leftPageClass, pagingStateClick Previous ] []
-        , span [] rng
-        , a [ class rightPageClass, pagingStateClick Next ] []
-        , a [ class lastPageClass, pagingStateClick Last ] []
-        ]
+        div [ class "dataTables_paginate paging_full_numbers" ]
+            [ a [ class firstPageClass, pagingStateClick First ] [ text "First" ]
+            , a [ class leftPageClass, pagingStateClick Previous ] [ text "Previous" ]
+            , span [] rng
+            , a [ class rightPageClass, pagingStateClick Next ] [ text "Next" ]
+            , a [ class lastPageClass, pagingStateClick Last ] [ text "Last" ]
+            ]
 
 
 
