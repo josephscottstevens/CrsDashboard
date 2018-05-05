@@ -16,8 +16,8 @@ module Common.Table
         )
 
 import Common.Functions as Functions
-import Html exposing (Html, a, button, div, input, li, span, table, tbody, td, text, th, thead, tr, ul)
-import Html.Attributes exposing (checked, class, classList, colspan, disabled, href, id, style, target, type_)
+import Html exposing (Html, a, div, input, label, option, select, span, table, tbody, td, text, th, thead, tr)
+import Html.Attributes exposing (attribute, checked, class, classList, colspan, disabled, href, id, rowspan, style, target, type_, value)
 import Html.Events as Events
 
 
@@ -34,17 +34,22 @@ init sortedColumnName =
     { selectedId = Nothing
     , openDropdownId = Nothing
     , pageIndex = 0
-    , rowsPerPage = 20
+    , rowsPerPage = Exactly 50
     , sortField = sortedColumnName
     , sortAscending = True
     }
+
+
+type RowsPerPage
+    = Exactly Int
+    | All
 
 
 type alias State =
     { selectedId : Maybe Int
     , openDropdownId : Maybe Int
     , pageIndex : Int
-    , rowsPerPage : Int
+    , rowsPerPage : RowsPerPage
     , sortField : String
     , sortAscending : Bool
     }
@@ -68,13 +73,13 @@ type Page
 
 type alias Column data msg =
     { name : String
-    , viewData : { data | id : Int } -> Html msg
+    , viewData : { data | content_id : Int } -> Html msg
     , columnStyle : ColumnStyle
     , sorter : Sorter data
     }
 
 
-intColumn : String -> ({ data | id : Int } -> Int) -> ColumnStyle -> Column data msg
+intColumn : String -> ({ data | content_id : Int } -> Int) -> ColumnStyle -> Column data msg
 intColumn name data columnStyle =
     { name = name
     , viewData = data >> (\t -> text (toString t))
@@ -83,7 +88,7 @@ intColumn name data columnStyle =
     }
 
 
-stringColumn : String -> ({ data | id : Int } -> Maybe String) -> ColumnStyle -> Column data msg
+stringColumn : String -> ({ data | content_id : Int } -> Maybe String) -> ColumnStyle -> Column data msg
 stringColumn name data columnStyle =
     { name = name
     , viewData = data >> (\t -> text (Maybe.withDefault "" t))
@@ -92,8 +97,8 @@ stringColumn name data columnStyle =
     }
 
 
-dateColumn : String -> ({ data | id : Int } -> Maybe String) -> ColumnStyle -> String -> Column data msg
-dateColumn name data columnStyle dataField =
+dateColumn : String -> ({ data | content_id : Int } -> Maybe String) -> ColumnStyle -> Column data msg
+dateColumn name data columnStyle =
     { name = name
     , viewData = data >> (\t -> text (Functions.defaultDate t))
     , columnStyle = columnStyle
@@ -101,8 +106,8 @@ dateColumn name data columnStyle dataField =
     }
 
 
-dateTimeColumn : String -> ({ data | id : Int } -> Maybe String) -> ColumnStyle -> String -> Column data msg
-dateTimeColumn name data columnStyle dataField =
+dateTimeColumn : String -> ({ data | content_id : Int } -> Maybe String) -> ColumnStyle -> Column data msg
+dateTimeColumn name data columnStyle =
     { name = name
     , viewData = data >> (\t -> text (Functions.defaultDateTime t))
     , columnStyle = columnStyle
@@ -110,7 +115,7 @@ dateTimeColumn name data columnStyle dataField =
     }
 
 
-hrefColumn : String -> ({ data | id : Int } -> ( Maybe String, String )) -> ColumnStyle -> ({ data | id : Int } -> comparable) -> Column data msg
+hrefColumn : String -> ({ data | content_id : Int } -> ( Maybe String, String )) -> ColumnStyle -> ({ data | content_id : Int } -> comparable) -> Column data msg
 hrefColumn name data columnStyle toComparable =
     { name = name
     , viewData = data >> viewHrefColumn
@@ -125,7 +130,7 @@ viewHrefColumn ( urlData, textData ) =
         [ text textData ]
 
 
-checkColumn : String -> ({ data | id : Int } -> Bool) -> ColumnStyle -> Column data msg
+checkColumn : String -> ({ data | content_id : Int } -> Bool) -> ColumnStyle -> Column data msg
 checkColumn name data columnStyle =
     { name = name
     , viewData = data >> viewCheckColumn
@@ -143,7 +148,7 @@ viewCheckColumn isChecked =
         ]
 
 
-htmlColumn : String -> ({ data | id : Int } -> Html msg) -> ColumnStyle -> ({ data | id : Int } -> comparable) -> Column data msg
+htmlColumn : String -> ({ data | content_id : Int } -> Html msg) -> ColumnStyle -> ({ data | content_id : Int } -> comparable) -> Column data msg
 htmlColumn name data columnStyle toComparable =
     { name = name
     , viewData = data
@@ -156,52 +161,97 @@ type alias Config data msg =
     { domTableId : String
     , toolbar : List ( String, msg )
     , toMsg : State -> msg
-    , columns : List (Column { data | id : Int } msg)
+    , columns : List (Column { data | content_id : Int } msg)
     }
 
 
 type Sorter data
     = None
-    | IncOrDec (List { data | id : Int } -> List { data | id : Int })
+    | IncOrDec (List { data | content_id : Int } -> List { data | content_id : Int })
 
 
 
 -- VIEW
 
 
-view : State -> List { data | id : Int } -> Config { data | id : Int } msg -> Maybe (Html msg) -> Html msg
+cellspacing : String -> Html.Attribute msg
+cellspacing t =
+    attribute "cellspacing" t
+
+
+cellpadding : String -> Html.Attribute msg
+cellpadding t =
+    attribute "cellspacing" t
+
+
+border : String -> Html.Attribute msg
+border t =
+    attribute "border" t
+
+
+view : State -> List { data | content_id : Int } -> Config { data | content_id : Int } msg -> Maybe (Html msg) -> Html msg
 view state rows config maybeCustomRow =
     let
         sortedRows =
             sort state config.columns rows
 
         filteredRows =
-            sortedRows
-                |> List.drop (state.pageIndex * state.rowsPerPage)
-                |> List.take state.rowsPerPage
+            case state.rowsPerPage of
+                Exactly rowsPerPage ->
+                    sortedRows
+                        |> List.drop (state.pageIndex * rowsPerPage)
+                        |> List.take rowsPerPage
+
+                All ->
+                    sortedRows
 
         totalRows =
             List.length rows
     in
-    div []
-        [ viewToolbar config.toolbar
-        , table []
+    div [ id "searchResultsTable_wrapper" ]
+        [ div [ class "top" ]
+            [ div [ class "dataTables_length", id "searchResultsTable_length" ]
+                [ label []
+                    [ text "Show"
+                    , select [ id "pageLengthSelect" ]
+                        [ option [ value "50", Events.onClick (config.toMsg { state | rowsPerPage = Exactly 50 }) ] [ text "50" ]
+                        , option [ value "100", Events.onClick (config.toMsg { state | rowsPerPage = Exactly 100 }) ] [ text "100" ]
+                        , option [ value "150", Events.onClick (config.toMsg { state | rowsPerPage = Exactly 150 }) ] [ text "150" ]
+                        , option [ value "200", Events.onClick (config.toMsg { state | rowsPerPage = Exactly 200 }) ] [ text "200" ]
+                        , option [ value "-1", Events.onClick (config.toMsg { state | rowsPerPage = All }) ] [ text "All" ]
+                        ]
+                    ]
+                ]
+            , pagingView state totalRows filteredRows config.toMsg
+            ]
+        , table
+            [ cellspacing "0"
+            , cellpadding "0"
+            , border "0"
+            , class "display dataTable no-footer"
+            , id config.domTableId
+            , style [ ( "width", "100%" ) ]
+            ]
             [ thead []
                 [ tr [] (List.map (viewTh state config) config.columns)
                 ]
             , tbody []
                 (viewTr state filteredRows config maybeCustomRow)
             ]
-        , pagingView state totalRows filteredRows config.toMsg
+        , div [ class "bottom" ]
+            [ div [ class "dataTables_info", id "searchResultsTable_info" ] [ text (pagerText state totalRows) ]
+            , pagingView state totalRows filteredRows config.toMsg
+            ]
+        , div [ class "clear" ] []
         ]
 
 
-viewTr : State -> List { data | id : Int } -> Config { data | id : Int } msg -> Maybe (Html msg) -> List (Html msg)
+viewTr : State -> List { data | content_id : Int } -> Config { data | content_id : Int } msg -> Maybe (Html msg) -> List (Html msg)
 viewTr state rows config maybeCustomRow =
     let
         selectedStyle row =
             style
-                (if Just row.id == state.selectedId then
+                (if Just row.content_id == state.selectedId then
                     [ ( "background-color", "#66aaff" )
                     , ( "background", "#66aaff" )
                     ]
@@ -211,14 +261,17 @@ viewTr state rows config maybeCustomRow =
 
         rowClass ctr =
             classList
-                [ ( "e-row", ctr % 2 == 0 )
-                , ( "e-alt_row", ctr % 2 == 1 )
+                [ ( "even", ctr % 2 == 0 )
+                , ( "odd", ctr % 2 == 1 )
                 ]
 
         standardTr ctr row =
             tr
                 [ rowClass ctr
                 , selectedStyle row
+                , classList
+                    [ ( "selected", Just row.content_id == state.selectedId )
+                    ]
                 ]
                 (List.map (viewTd state row config) config.columns)
 
@@ -258,150 +311,76 @@ viewTr state rows config maybeCustomRow =
                 List.indexedMap standardTr rows
 
 
-viewTh : State -> Config { data | id : Int } msg -> Column { data | id : Int } msg -> Html msg
+columnStyle : { data | columnStyle : ColumnStyle } -> Html.Attribute msg
+columnStyle column =
+    case column.columnStyle of
+        NoStyle ->
+            style []
+
+        Width t ->
+            style [ ( "width", toString t ++ "%" ) ]
+
+        CustomStyle t ->
+            style t
+
+
+viewTh : State -> Config { data | content_id : Int } msg -> Column { data | content_id : Int } msg -> Html msg
 viewTh state config column =
     let
-        headerContent =
+        thClass =
             if state.sortField == column.name then
                 if not state.sortAscending then
-                    [ text column.name, span [ class "e-icon e-ascending e-rarrowup-2x" ] [] ]
+                    class "left sorting_desc"
                 else
-                    [ text column.name, span [ class "e-icon e-ascending e-rarrowdown-2x" ] [] ]
+                    class "left sorting_asc"
             else
-                [ text column.name ]
-
-        newSortDirection =
-            not state.sortAscending
+                class "left sorting"
 
         sortClick =
-            Events.onClick (config.toMsg { state | sortAscending = newSortDirection, sortField = column.name })
+            Events.onClick (config.toMsg { state | sortAscending = not state.sortAscending, sortField = column.name })
     in
-    th [ sortClick ]
-        [ div [] headerContent
+    th
+        [ thClass
+        , sortClick
+        , columnStyle column
+        , rowspan 1
+        , colspan 1
+        ]
+        [ text column.name
         ]
 
 
-viewTd : State -> { data | id : Int } -> Config { data | id : Int } msg -> Column { data | id : Int } msg -> Html msg
+viewTd : State -> { data | content_id : Int } -> Config { data | content_id : Int } msg -> Column { data | content_id : Int } msg -> Html msg
 viewTd state row config column =
-    let
-        tdClass =
-            classList
-                [ ( "e-active", Just row.id == state.selectedId )
-                ]
-
-        tdStyle =
-            style [ ( "padding-left", "8.4px" ) ]
-
-        tdClick =
-            Events.onClick (config.toMsg { state | selectedId = Just row.id })
-    in
-    td [ tdClass, tdStyle, tdClick ]
+    td
+        [ Events.onClick (config.toMsg { state | selectedId = Just row.content_id })
+        , class "left"
+        ]
         [ column.viewData row ]
-
-
-
--- Custom
-
-
-rowDropDownDiv : State -> (State -> msg) -> { data | id : Int } -> List ( String, String, { data | id : Int } -> msg ) -> Html msg
-rowDropDownDiv state toMsg row dropDownItems =
-    let
-        dropClickEvent event =
-            Events.onClick (event row)
-
-        dropDownMenuItem : ( String, String, { data | id : Int } -> msg ) -> Html msg
-        dropDownMenuItem ( iconClass, displayText, event ) =
-            li [ class "e-content e-list", dropClickEvent event ]
-                [ a [ class "e-menulink", target "_blank" ]
-                    [ text displayText
-                    , span [ class ("e-gridcontext e-icon " ++ iconClass) ] []
-                    ]
-                ]
-
-        dropDownMenuStyle : Html.Attribute msg
-        dropDownMenuStyle =
-            style
-                [ ( "z-index", "5000" )
-                , ( "position", "absolute" )
-                , ( "display", "block" )
-                , ( "left", "-173px" )
-                , ( "width", "178.74px" )
-                ]
-
-        dropMenu =
-            case state.openDropdownId of
-                Just t ->
-                    if row.id == t then
-                        [ ul [ class "e-menu e-js e-widget e-box e-separator" ]
-                            (List.map dropDownMenuItem dropDownItems)
-                        ]
-                    else
-                        []
-
-                Nothing ->
-                    []
-
-        btnClass =
-            class "btn btn-sm btn-default fa fa-angle-down btn-context-menu editDropDown"
-
-        btnStyle =
-            style [ ( "position", "relative" ) ]
-
-        clickEvent =
-            case state.openDropdownId of
-                Just _ ->
-                    Events.onClick (toMsg { state | openDropdownId = Nothing })
-
-                Nothing ->
-                    Events.onClick (toMsg { state | openDropdownId = Just row.id })
-
-        blurEvent =
-            Events.onBlur (toMsg { state | openDropdownId = Nothing })
-    in
-    div []
-        [ div [ style [ ( "text-align", "right" ) ] ]
-            [ button [ id "contextMenuButton", type_ "button", btnClass, clickEvent, blurEvent, btnStyle ]
-                [ div [ id "editButtonMenu", dropDownMenuStyle ]
-                    dropMenu
-                ]
-            ]
-        ]
-
-
-viewToolbar : List ( String, msg ) -> Html msg
-viewToolbar items =
-    div [ class "e-gridtoolbar e-toolbar e-js e-widget e-box e-toolbarspan e-tooltip" ]
-        [ ul [ class "e-ul e-horizontal" ]
-            [ li [ class "e-tooltxt" ]
-                (List.map toolbarHelper items)
-            ]
-        ]
-
-
-toolbarHelper : ( String, msg ) -> Html msg
-toolbarHelper ( iconStr, event ) =
-    let
-        iconStyle =
-            if String.contains "e-disable" iconStr then
-                style []
-            else
-                style [ ( "cursor", "pointer" ) ]
-
-        iconClass =
-            "e-addnewitem e-toolbaricons e-icon " ++ iconStr
-    in
-    a [ class iconClass, Events.onClick event, iconStyle, id "btnNewRecord" ] []
 
 
 
 -- paging
 
 
+getLastIndex : Int -> RowsPerPage -> Int
+getLastIndex totalRows rowsPerPage =
+    case rowsPerPage of
+        Exactly t ->
+            totalRows // t
+
+        All ->
+            if totalRows - 1 <= 0 then
+                0
+            else
+                totalRows - 1
+
+
 setPagingState : State -> Int -> (State -> msg) -> Page -> Html.Attribute msg
 setPagingState state totalRows toMsg page =
     let
         lastIndex =
-            totalRows // state.rowsPerPage
+            getLastIndex totalRows state.rowsPerPage
 
         bounded t =
             if t > lastIndex then
@@ -437,11 +416,33 @@ setPagingState state totalRows toMsg page =
     Events.onClick (toMsg { state | pageIndex = newIndex })
 
 
-pagingView : State -> Int -> List { data | id : Int } -> (State -> msg) -> Html msg
+pagerText : State -> Int -> String
+pagerText state totalRows =
+    let
+        lastIndex =
+            getLastIndex totalRows state.rowsPerPage
+
+        currentPageText =
+            toString (state.pageIndex + 1)
+
+        totalPagesText =
+            toString <|
+                if lastIndex < 1 then
+                    1
+                else
+                    lastIndex + 1
+
+        totalItemsText =
+            toString totalRows
+    in
+    "Showing " ++ currentPageText ++ " to " ++ totalItemsText ++ " of " ++ totalPagesText ++ " entries"
+
+
+pagingView : State -> Int -> List { data | content_id : Int } -> (State -> msg) -> Html msg
 pagingView state totalRows rows toMsg =
     let
         lastIndex =
-            totalRows // state.rowsPerPage
+            getLastIndex totalRows state.rowsPerPage
 
         pagingStateClick page =
             setPagingState state totalRows toMsg page
@@ -450,12 +451,12 @@ pagingView state totalRows rows toMsg =
             let
                 activeOrNotText =
                     if pageIndex == state.pageIndex then
-                        "e-currentitem e-active"
+                        "paginate_button current"
                     else
-                        "e-default"
+                        "paginate_button"
             in
-            div
-                [ class ("e-link e-numericitem e-spacing " ++ activeOrNotText)
+            a
+                [ class activeOrNotText
                 , pagingStateClick (Index pageIndex)
                 ]
                 [ text (toString (pageIndex + 1)) ]
@@ -468,70 +469,34 @@ pagingView state totalRows rows toMsg =
 
         firstPageClass =
             if state.pageIndex > 1 then
-                "e-icon e-mediaback e-firstpage e-default"
+                "paginate_button first"
             else
-                "e-icon e-mediaback e-firstpagedisabled e-disable"
+                "paginate_button first disabled"
 
         leftPageClass =
             if state.pageIndex > 0 then
-                "e-icon e-arrowheadleft-2x e-prevpage e-default"
+                "paginate_button previous"
             else
-                "e-icon e-arrowheadleft-2x e-prevpagedisabled e-disable"
-
-        leftPageBlockClass =
-            if state.pageIndex >= blockSize then
-                "e-link e-spacing e-PP e-numericitem e-default"
-            else
-                "e-link e-nextprevitemdisabled e-disable e-spacing e-PP"
-
-        rightPageBlockClass =
-            if state.pageIndex < lastIndex - blockSize then
-                "e-link e-NP e-spacing e-numericitem e-default"
-            else
-                "e-link e-NP e-spacing e-nextprevitemdisabled e-disable"
+                "paginate_button previous disabled"
 
         rightPageClass =
             if state.pageIndex < lastIndex then
-                "e-nextpage e-icon e-arrowheadright-2x e-default"
+                "paginate_button next"
             else
-                "e-icon e-arrowheadright-2x e-nextpagedisabled e-disable"
+                "paginate_button next disabled"
 
         lastPageClass =
             if state.pageIndex < lastIndex then
-                "e-lastpage e-icon e-mediaforward e-default"
+                "paginate_button last"
             else
-                "e-icon e-mediaforward e-animate e-lastpagedisabled e-disable"
-
-        pagerText =
-            let
-                currentPageText =
-                    toString (state.pageIndex + 1)
-
-                totalPagesText =
-                    toString <|
-                        if lastIndex < 1 then
-                            1
-                        else
-                            lastIndex + 1
-
-                totalItemsText =
-                    toString totalRows
-            in
-            currentPageText ++ " of " ++ totalPagesText ++ " pages (" ++ totalItemsText ++ " items)"
+                "paginate_button last disabled"
     in
-    div [ class "e-pager e-js e-pager" ]
-        [ div [ class "e-pagercontainer" ]
-            [ div [ class firstPageClass, pagingStateClick First ] []
-            , div [ class leftPageClass, pagingStateClick Previous ] []
-            , a [ class leftPageBlockClass, pagingStateClick PreviousBlock ] [ text "..." ]
-            , div [ class "e-numericcontainer e-default" ] rng
-            , a [ class rightPageBlockClass, pagingStateClick NextBlock ] [ text "..." ]
-            , div [ class rightPageClass, pagingStateClick Next ] []
-            , div [ class lastPageClass, pagingStateClick Last ] []
-            ]
-        , div [ class "e-parentmsgbar", style [ ( "text-align", "right" ) ] ]
-            [ span [ class "e-pagermsg" ] [ text pagerText ]
-            ]
+    div [ class "dataTables_paginate paging_full_numbers" ]
+        [ a [ class firstPageClass, pagingStateClick First ] []
+        , a [ class leftPageClass, pagingStateClick Previous ] []
+        , span [] rng
+        , a [ class rightPageClass, pagingStateClick Next ] []
+        , a [ class lastPageClass, pagingStateClick Last ] []
         ]
 
 
@@ -539,7 +504,7 @@ pagingView state totalRows rows toMsg =
 -- Sorting
 
 
-sort : State -> List (Column { data | id : Int } msg) -> List { data | id : Int } -> List { data | id : Int }
+sort : State -> List (Column { data | content_id : Int } msg) -> List { data | content_id : Int } -> List { data | content_id : Int }
 sort state columnData data =
     case findSorter state.sortField columnData of
         Nothing ->
@@ -549,7 +514,7 @@ sort state columnData data =
             applySorter state.sortAscending sorter data
 
 
-applySorter : Bool -> Sorter { data | id : Int } -> List { data | id : Int } -> List { data | id : Int }
+applySorter : Bool -> Sorter { data | content_id : Int } -> List { data | content_id : Int } -> List { data | content_id : Int }
 applySorter isReversed sorter data =
     case sorter of
         None ->
@@ -562,7 +527,7 @@ applySorter isReversed sorter data =
                 sort data
 
 
-findSorter : String -> List (Column { data | id : Int } msg) -> Maybe (Sorter { data | id : Int })
+findSorter : String -> List (Column { data | content_id : Int } msg) -> Maybe (Sorter { data | content_id : Int })
 findSorter selectedColumn columnData =
     case columnData of
         [] ->
@@ -575,21 +540,21 @@ findSorter selectedColumn columnData =
                 findSorter selectedColumn remainingColumnData
 
 
-increasingOrDecreasingBy : ({ data | id : Int } -> comparable) -> Sorter data
+increasingOrDecreasingBy : ({ data | content_id : Int } -> comparable) -> Sorter data
 increasingOrDecreasingBy toComparable =
     IncOrDec (List.sortBy toComparable)
 
 
-defaultSort : ({ data | id : Int } -> Maybe String) -> Sorter data
+defaultSort : ({ data | content_id : Int } -> Maybe String) -> Sorter data
 defaultSort t =
     increasingOrDecreasingBy (Functions.defaultString << t)
 
 
-intSort : ({ data | id : Int } -> Int) -> Sorter data
+intSort : ({ data | content_id : Int } -> Int) -> Sorter data
 intSort t =
     increasingOrDecreasingBy (toString << t)
 
 
-defaultBoolSort : ({ data | id : Int } -> Bool) -> Sorter data
+defaultBoolSort : ({ data | content_id : Int } -> Bool) -> Sorter data
 defaultBoolSort t =
     increasingOrDecreasingBy (toString << t)
