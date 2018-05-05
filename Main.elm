@@ -6,23 +6,17 @@ import Html.Attributes exposing (placeholder)
 import Html.Events exposing (onInput)
 
 
-main =
-    Html.program
-        { init = init presidents
-        , update = update
-        , view = view
-        , subscriptions = \_ -> Sub.none
-        }
-
-
-
--- MODEL
+subscriptions : Model -> Sub msg
+subscriptions model =
+    Sub.batch
+        []
 
 
 type alias Model =
     { rows : List Person
     , tableState : Table.State
     , query : String
+    , favoritePerson : Person
     }
 
 
@@ -35,19 +29,24 @@ type alias Person =
     }
 
 
-init people =
+view : Model -> Html Msg
+view model =
     let
-        model =
-            { rows = people
-            , tableState = Table.init "Year"
-            , query = ""
-            }
+        lowerQuery =
+            String.toLower model.query
+
+        rowToString t =
+            String.toLower (toString t)
+
+        filteredRows =
+            model.rows
+                |> List.filter (\t -> String.contains lowerQuery (rowToString t))
     in
-    ( model, Cmd.none )
-
-
-
--- UPDATE
+    div []
+        [ h1 [] [ text "Birthplaces of U.S. Presidents" ]
+        , input [ placeholder "Search", onInput SetQuery ] []
+        , Table.view model.tableState filteredRows gridConfig Nothing
+        ]
 
 
 type Msg
@@ -67,26 +66,6 @@ update msg model =
             ( { model | tableState = newState }
             , Cmd.none
             )
-
-
-
--- VIEW
-
-
-view : Model -> Html Msg
-view model =
-    -- let
-    --     lowerQuery =
-    --         String.toLower query
-    --     acceptablePeople =
-    --         List.filter (String.contains lowerQuery << String.toLower << .name) people
-    -- in
-    div []
-        [ h1 [] [ text "Birthplaces of U.S. Presidents" ]
-
-        -- , input [ placeholder "Search by Name", onInput SetQuery ] []
-        , Table.view model.tableState model.rows gridConfig Nothing
-        ]
 
 
 gridConfig : Table.Config Person Msg
@@ -150,3 +129,27 @@ presidents =
     , Person 42 (Just "Barack Obama") 1961 (Just "Honolulu") (Just "Hawaii")
     , Person 43 (Just "Donald Trump") 1946 (Just "New York City") (Just "New York")
     ]
+
+
+init : ( Model, Cmd msg )
+init =
+    ( emptyModel, Cmd.none )
+
+
+emptyModel : Model
+emptyModel =
+    { rows = presidents
+    , tableState = Table.init "Year"
+    , query = ""
+    , favoritePerson = Person 55 (Just "Sam") 1950 (Just "aa") (Just "bb")
+    }
+
+
+main : Program Never Model Msg
+main =
+    Html.program
+        { init = init
+        , update = update
+        , view = view
+        , subscriptions = subscriptions
+        }
