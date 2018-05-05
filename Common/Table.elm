@@ -6,10 +6,8 @@ module Common.Table
         , checkColumn
         , dateColumn
         , dateTimeColumn
-        , dropdownColumn
-        , hrefColumn
-        , hrefColumnExtra
-        , htmlColumn
+          -- , hrefColumn
+          -- , htmlColumn
         , init
         , intColumn
         , stringColumn
@@ -31,6 +29,17 @@ blockSize =
     15
 
 
+init : String -> State
+init sortedColumnName =
+    { selectedId = Nothing
+    , openDropdownId = Nothing
+    , pageIndex = 0
+    , rowsPerPage = 20
+    , sortField = sortedColumnName
+    , sortAscending = True
+    }
+
+
 type alias State =
     { selectedId : Maybe Int
     , openDropdownId : Maybe Int
@@ -39,6 +48,12 @@ type alias State =
     , sortField : String
     , sortAscending : Bool
     }
+
+
+type ColumnStyle
+    = NoStyle
+    | Width Int
+    | CustomStyle (List ( String, String ))
 
 
 type Page
@@ -51,72 +66,92 @@ type Page
     | Last
 
 
-init : String -> State
-init sortedColumnName =
-    { selectedId = Nothing
-    , openDropdownId = Nothing
-    , pageIndex = 0
-    , rowsPerPage = 20
-    , sortField = sortedColumnName
-    , sortAscending = True
+type alias Column data msg =
+    { name : String
+    , viewData : { data | id : Int } -> Html msg
+    , columnStyle : ColumnStyle
+    , sorter : Sorter data
     }
 
 
-type Column data msg
-    = IntColumn String ({ data | id : Int } -> Int) (Sorter data)
-    | StringColumn String ({ data | id : Int } -> Maybe String) (Sorter data)
-    | DateTimeColumn String ({ data | id : Int } -> Maybe String) (Sorter data)
-    | DateColumn String ({ data | id : Int } -> Maybe String) (Sorter data)
-    | HrefColumn String String ({ data | id : Int } -> Maybe String) (Sorter data)
-    | HrefColumnExtra String ({ data | id : Int } -> Html msg)
-    | CheckColumn String ({ data | id : Int } -> Bool) (Sorter data)
-    | DropdownColumn (List ( String, String, data -> msg ))
-    | HtmlColumn String ({ data | id : Int } -> Maybe String) (Sorter data)
+intColumn : String -> ({ data | id : Int } -> Int) -> ColumnStyle -> Column data msg
+intColumn name data columnStyle =
+    { name = name
+    , viewData = data >> (\t -> text (toString t))
+    , columnStyle = columnStyle
+    , sorter = intSort data
+    }
 
 
-intColumn : String -> ({ data | id : Int } -> Int) -> Column data msg
-intColumn name data =
-    IntColumn name data (intSort data)
+stringColumn : String -> ({ data | id : Int } -> Maybe String) -> ColumnStyle -> Column data msg
+stringColumn name data columnStyle =
+    { name = name
+    , viewData = data >> (\t -> text (Maybe.withDefault "" t))
+    , columnStyle = columnStyle
+    , sorter = defaultSort data
+    }
 
 
-stringColumn : String -> ({ data | id : Int } -> Maybe String) -> Column data msg
-stringColumn name data =
-    StringColumn name data (defaultSort data)
+dateColumn : String -> ({ data | id : Int } -> Maybe String) -> ColumnStyle -> String -> Column data msg
+dateColumn name data columnStyle dataField =
+    { name = name
+    , viewData = data >> (\t -> text (Functions.defaultDate t))
+    , columnStyle = columnStyle
+    , sorter = defaultSort data
+    }
 
 
-dateTimeColumn : String -> ({ data | id : Int } -> Maybe String) -> Column data msg
-dateTimeColumn name data =
-    DateTimeColumn name data (defaultSort data)
+dateTimeColumn : String -> ({ data | id : Int } -> Maybe String) -> ColumnStyle -> String -> Column data msg
+dateTimeColumn name data columnStyle dataField =
+    { name = name
+    , viewData = data >> (\t -> text (Functions.defaultDateTime t))
+    , columnStyle = columnStyle
+    , sorter = defaultSort data
+    }
 
 
-dateColumn : String -> ({ data | id : Int } -> Maybe String) -> Column data msg
-dateColumn name data =
-    DateColumn name data (defaultSort data)
+
+-- hrefColumn : String -> ({ data | id : Int } -> ( Maybe String, String )) -> ColumnStyle -> Sorter { data | id : Int } -> Column data msg
+-- hrefColumn name data columnStyle sorter =
+--     { name = name
+--     , viewData = data >> viewHrefColumn
+--     , columnStyle = columnStyle
+--     , sorter = sorter
+--     }
 
 
-hrefColumn : String -> String -> ({ data | id : Int } -> Maybe String) -> Column data msg
-hrefColumn url displayStr data =
-    HrefColumn url displayStr data (defaultSort data)
+viewHrefColumn : ( Maybe String, String ) -> Html msg
+viewHrefColumn ( urlData, textData ) =
+    a [ href (Functions.defaultString urlData), target "_blank" ]
+        [ text textData ]
 
 
-hrefColumnExtra : String -> ({ data | id : Int } -> Html msg) -> Column data msg
-hrefColumnExtra name toNode =
-    HrefColumnExtra name toNode
+checkColumn : String -> ({ data | id : Int } -> Bool) -> ColumnStyle -> Column data msg
+checkColumn name data columnStyle =
+    { name = name
+    , viewData = data >> viewCheckColumn
+    , columnStyle = columnStyle
+    , sorter = defaultBoolSort data
+    }
 
 
-checkColumn : String -> ({ data | id : Int } -> Bool) -> Column data msg
-checkColumn str data =
-    CheckColumn str data (defaultBoolSort data)
+viewCheckColumn : Bool -> Html msg
+viewCheckColumn isChecked =
+    div [ class "e-checkcell" ]
+        [ div [ class "e-checkcelldiv", style [ ( "text-align", "center" ) ] ]
+            [ input [ type_ "checkbox", disabled True, checked isChecked ] []
+            ]
+        ]
 
 
-dropdownColumn : List ( String, String, data -> msg ) -> Column data msg
-dropdownColumn items =
-    DropdownColumn items
 
-
-htmlColumn : String -> ({ data | id : Int } -> Maybe String) -> Column data msg
-htmlColumn name data =
-    HtmlColumn name data (defaultSort data)
+-- htmlColumn : String -> ({ data | id : Int } -> Html msg) -> ColumnStyle -> Sorter { data | id : Int } -> Column data msg
+-- htmlColumn name data columnStyle sorter =
+--     { name = name
+--     , viewData = data
+--     , columnStyle = columnStyle
+--     , sorter = sorter
+--     }
 
 
 type alias Config data msg =
@@ -231,25 +266,22 @@ viewTr state rows config maybeCustomRow =
 viewTh : State -> Config { data | id : Int } msg -> Column { data | id : Int } msg -> Html msg
 viewTh state config column =
     let
-        name =
-            getColumnName column
-
         headerContent =
-            if state.sortField == name then
+            if state.sortField == column.name then
                 if not state.sortAscending then
-                    [ text name, span [ class "e-icon e-ascending e-rarrowup-2x" ] [] ]
+                    [ text column.name, span [ class "e-icon e-ascending e-rarrowup-2x" ] [] ]
                 else
-                    [ text name, span [ class "e-icon e-ascending e-rarrowdown-2x" ] [] ]
+                    [ text column.name, span [ class "e-icon e-ascending e-rarrowdown-2x" ] [] ]
             else
-                [ text name ]
+                [ text column.name ]
 
         newSortDirection =
             not state.sortAscending
 
         sortClick =
-            Events.onClick (config.toMsg { state | sortAscending = newSortDirection, sortField = name })
+            Events.onClick (config.toMsg { state | sortAscending = newSortDirection, sortField = column.name })
     in
-    th [ class ("e-headercell e-default " ++ name), sortClick ]
+    th [ class ("e-headercell e-default " ++ column.name), sortClick ]
         [ div [ class "e-headercelldiv e-gridtooltip" ] headerContent
         ]
 
@@ -277,52 +309,10 @@ viewTd state row config column =
             style [ ( "padding-left", "8.4px" ) ]
 
         tdClick =
-            case column of
-                DropdownColumn _ ->
-                    disabled False
-
-                _ ->
-                    Events.onClick (config.toMsg { state | selectedId = Just row.id })
+            Events.onClick (config.toMsg { state | selectedId = Just row.id })
     in
     td [ tdClass, tdStyle, tdClick ]
-        [ case column of
-            IntColumn _ dataToInt _ ->
-                text (toString (dataToInt row))
-
-            StringColumn _ dataToString _ ->
-                text (Maybe.withDefault "" (dataToString row))
-
-            DateTimeColumn _ dataToString _ ->
-                text (Functions.defaultDateTime (dataToString row))
-
-            DateColumn _ dataToString _ ->
-                text (Functions.defaultDate (dataToString row))
-
-            HrefColumn _ displayText dataToString _ ->
-                case dataToString row of
-                    Just t ->
-                        a [ href t, target "_blank" ]
-                            [ text t ]
-
-                    Nothing ->
-                        text ""
-
-            HrefColumnExtra _ toNode ->
-                toNode row
-
-            CheckColumn _ dataToString _ ->
-                div [ class "e-checkcell" ]
-                    [ div [ class "e-checkcelldiv", style [ ( "text-align", "center" ) ] ]
-                        [ input [ type_ "checkbox", disabled True, checked (dataToString row) ] []
-                        ]
-                    ]
-
-            DropdownColumn dropDownItems ->
-                rowDropDownDiv state config.toMsg row dropDownItems
-
-            HtmlColumn _ dataToString _ ->
-                textHtml (Maybe.withDefault "" (dataToString row))
-        ]
+        [ column.viewData row ]
 
 
 textHtml : String -> Html msg
@@ -332,37 +322,6 @@ textHtml t =
             |> Html.Attributes.property "innerHTML"
         ]
         []
-
-
-getColumnName : Column { data | id : Int } msg -> String
-getColumnName column =
-    case column of
-        IntColumn name _ _ ->
-            name
-
-        StringColumn name _ _ ->
-            name
-
-        DateTimeColumn name _ _ ->
-            name
-
-        DateColumn name _ _ ->
-            name
-
-        HrefColumn name _ _ _ ->
-            name
-
-        HrefColumnExtra name _ ->
-            name
-
-        CheckColumn name _ _ ->
-            name
-
-        DropdownColumn _ ->
-            ""
-
-        HtmlColumn name _ _ ->
-            name
 
 
 
@@ -634,55 +593,11 @@ findSorter selectedColumn columnData =
         [] ->
             Nothing
 
-        column :: remainingColumnData ->
-            case column of
-                IntColumn name _ sorter ->
-                    if name == selectedColumn then
-                        Just sorter
-                    else
-                        findSorter selectedColumn remainingColumnData
-
-                StringColumn name _ sorter ->
-                    if name == selectedColumn then
-                        Just sorter
-                    else
-                        findSorter selectedColumn remainingColumnData
-
-                DateTimeColumn name _ sorter ->
-                    if name == selectedColumn then
-                        Just sorter
-                    else
-                        findSorter selectedColumn remainingColumnData
-
-                DateColumn name _ sorter ->
-                    if name == selectedColumn then
-                        Just sorter
-                    else
-                        findSorter selectedColumn remainingColumnData
-
-                HrefColumn name _ _ sorter ->
-                    if name == selectedColumn then
-                        Just sorter
-                    else
-                        findSorter selectedColumn remainingColumnData
-
-                HrefColumnExtra _ _ ->
-                    Nothing
-
-                CheckColumn name _ sorter ->
-                    if name == selectedColumn then
-                        Just sorter
-                    else
-                        findSorter selectedColumn remainingColumnData
-
-                DropdownColumn _ ->
-                    Nothing
-
-                HtmlColumn name _ sorter ->
-                    if name == selectedColumn then
-                        Just sorter
-                    else
-                        findSorter selectedColumn remainingColumnData
+        { name, sorter } :: remainingColumnData ->
+            if name == selectedColumn then
+                Just sorter
+            else
+                findSorter selectedColumn remainingColumnData
 
 
 increasingOrDecreasingBy : ({ data | id : Int } -> comparable) -> Sorter data
