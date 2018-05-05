@@ -186,14 +186,11 @@ view state rows config maybeCustomRow =
         totalRows =
             List.length rows
     in
-    div [ class "e-grid e-js e-waitingpopup" ]
+    div []
         [ viewToolbar config.toolbar
-        , table [ id config.domTableId, class "e-table", style [ ( "border-collapse", "collapse" ) ] ]
-            [ thead [ class "e-gridheader e-columnheader e-hidelines" ]
+        , table []
+            [ thead []
                 [ tr [] (List.map (viewTh state config) config.columns)
-
-                -- This is for filters, this can come at a later time
-                -- , tr [] (List.map (viewThFilter state config) config.columns)
                 ]
             , tbody []
                 (viewTr state filteredRows config maybeCustomRow)
@@ -282,18 +279,8 @@ viewTh state config column =
         sortClick =
             Events.onClick (config.toMsg { state | sortAscending = newSortDirection, sortField = column.name })
     in
-    th [ class ("e-headercell e-default " ++ column.name), sortClick ]
-        [ div [ class "e-headercelldiv e-gridtooltip" ] headerContent
-        ]
-
-
-viewThFilter : State -> Config { data | id : Int } msg -> Column { data | id : Int } msg -> Html msg
-viewThFilter state config column =
-    th [ class "e-filterbarcell" ]
-        [ div [ class "e-filterdiv e-fltrinputdiv" ]
-            [ input [ class "e-ejinputtext e-filtertext" ] []
-            , span [ class "e-cancel e-icon" ] []
-            ]
+    th [ sortClick ]
+        [ div [] headerContent
         ]
 
 
@@ -302,8 +289,7 @@ viewTd state row config column =
     let
         tdClass =
             classList
-                [ ( "e-gridtooltip", True )
-                , ( "e-active", Just row.id == state.selectedId )
+                [ ( "e-active", Just row.id == state.selectedId )
                 ]
 
         tdStyle =
@@ -314,15 +300,6 @@ viewTd state row config column =
     in
     td [ tdClass, tdStyle, tdClick ]
         [ column.viewData row ]
-
-
-textHtml : String -> Html msg
-textHtml t =
-    div
-        [ Encode.string t
-            |> Html.Attributes.property "innerHTML"
-        ]
-        []
 
 
 
