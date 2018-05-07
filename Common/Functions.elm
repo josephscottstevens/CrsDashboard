@@ -2,6 +2,29 @@ module Common.Functions exposing (..)
 
 import Date
 import Date.Extra
+import Dict exposing (Dict)
+
+
+groupBy : (a -> comparable) -> List a -> List ( comparable, List a )
+groupBy fun items =
+    Dict.toList (groupByDict fun items)
+
+
+groupByDict : (a -> comparable) -> List a -> Dict comparable (List a)
+groupByDict fun =
+    let
+        add2Maybe x m =
+            case m of
+                Nothing ->
+                    Just [ x ]
+
+                Just xs ->
+                    Just (xs ++ [ x ])
+
+        foldF e =
+            Dict.update (fun e) (add2Maybe e)
+    in
+        List.foldl foldF Dict.empty
 
 
 defaultString : Maybe String -> String

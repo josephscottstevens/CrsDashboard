@@ -1,109 +1,100 @@
 port module Main exposing (main)
 
+import Array exposing (Array)
+import Common.Functions as Functions
 import Common.Table as Table exposing (ColumnStyle(CustomStyle, Width))
 import Html exposing (Html, div, h1, input, text)
 import Html.Attributes exposing (placeholder)
 import Html.Events exposing (onInput)
 
 
-port loadData : (List Person -> msg) -> Sub msg
+port loadData : (List JsonData -> msg) -> Sub msg
 
 
-subscriptions : Model -> Sub Msg
+cust_codes : List String
+cust_codes =
+    [ "ABJ010", "DJA414", "GXD831", "ABJ002", "RANDO" ]
+
+
+subscriptions : Model -> Sub msg
 subscriptions model =
     Sub.batch
-        [ loadData LoadData ]
+        []
 
 
-type alias Model =
-    { rows : List Person
-    , tableState : Table.State
-    , query : String
+type alias JsonData =
+    { content_type : String
+    , content_id : Int
+    , content_key : String
+    , cust_code : String
     }
 
 
-type alias Person =
+type alias Row =
     { content_id : Int
-    , custom : Maybe String
-    , active : Maybe String
-    , content_key : Maybe String
-    , title : Maybe String
-    , internal_user : Maybe String
-    , priority : Maybe Int
-    , market_date : Maybe Int
-    , frequency : Maybe String
-    , schedule : Maybe String
-    , dynamic_product : Maybe String
-    , unix_path : Maybe String
-    , contact_team : Maybe String
-    , contact_team_id : Maybe Int
-    , tag : Maybe String
-    , contenttype_id : Maybe Int
-    , approval_method : Maybe String
-    , default_format : Maybe String
-    , run_date : Maybe Int
+    , items : Array Bool
+    }
+
+
+type alias Model =
+    { rows : List Row
+    , tableState : Table.State
     }
 
 
 view : Model -> Html Msg
 view model =
-    let
-        lowerQuery =
-            String.toLower model.query
-
-        rowToString t =
-            String.toLower (toString t)
-
-        filteredRows =
-            model.rows
-                |> List.filter (\t -> String.contains lowerQuery (rowToString t))
-    in
-        if model.rows == [] then
-            text "Loading"
-        else
-            div []
-                [ h1 [] [ text "Results" ]
-                , input [ placeholder "Search", onInput SetQuery ] []
-                , Table.view model.tableState filteredRows gridConfig Nothing
-                ]
+    div []
+        [ Table.view model.tableState model.rows gridConfig Nothing
+        ]
 
 
 type Msg
-    = SetQuery String
-    | SetTableState Table.State
-    | LoadData (List Person)
+    = SetTableState Table.State
+    | LoadData (List JsonData)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        SetQuery newQuery ->
-            ( { model | query = newQuery }
-            , Cmd.none
-            )
-
         SetTableState newState ->
             ( { model | tableState = newState }
             , Cmd.none
             )
 
-        LoadData newState ->
-            ( { model | rows = newState }
+        LoadData data ->
+            ( { model | rows = getRows data }
             , Cmd.none
             )
 
 
-gridConfig : Table.Config Person Msg
+boolHelper : Int -> Row -> Maybe String
+boolHelper idx row =
+    case Array.get idx row.items of
+        Just t ->
+            if t == True then
+                Just "X"
+            else
+                Just ""
+
+        Nothing ->
+            Nothing
+
+
+gridConfig : Table.Config Row Msg
 gridConfig =
-    { domTableId = "ContentResultsTable"
+    { domTableId = "PresidentsTable"
     , toolbar = []
     , toMsg = SetTableState
     , columns =
-        [ Table.stringColumn "Content Key" .content_key (Width 1)
-        , Table.stringColumn "Title" .title (Width 1)
-        , Table.stringColumn "Format" .default_format (Width 1)
-        , Table.stringColumn "Active" .active (Width 1)
+        [ Table.stringColumn "Content ID" (\t -> Just (toString t.content_id)) (Width 1)
         ]
+            ++ List.indexedMap
+                (\idx custCode ->
+                    Table.stringColumn custCode (\t -> boolHelper idx t) (Width 1)
+                )
+                cust_codes
+    , toRowId = .content_id
     }
 
 
@@ -112,11 +103,26 @@ init =
     ( emptyModel, Cmd.none )
 
 
+getRows : List JsonData -> List Row
+getRows items =
+    items
+        |> Functions.groupBy .content_id
+        |> List.map mapper
+
+
+mapper : ( Int, List JsonData ) -> Row
+mapper ( content_id, items ) =
+    let
+        custCodeItems =
+            List.map .cust_code items
+    in
+        Row content_id (Array.fromList (List.map (\t -> List.member t custCodeItems) cust_codes))
+
+
 emptyModel : Model
 emptyModel =
     { rows = []
     , tableState = Table.init "Year"
-    , query = ""
     }
 
 

@@ -34,7 +34,7 @@ init sortedColumnName =
     { selectedId = Nothing
     , openDropdownId = Nothing
     , pageIndex = 0
-    , rowsPerPage = All
+    , rowsPerPage = Exactly 50
     , sortField = sortedColumnName
     , sortAscending = True
     }
@@ -73,13 +73,13 @@ type Page
 
 type alias Column data msg =
     { name : String
-    , viewData : { data | content_id : Int } -> Html msg
+    , viewData : data -> Html msg
     , columnStyle : ColumnStyle
     , sorter : Sorter data
     }
 
 
-intColumn : String -> ({ data | content_id : Int } -> Maybe Int) -> ColumnStyle -> Column data msg
+intColumn : String -> (data -> Maybe Int) -> ColumnStyle -> Column data msg
 intColumn name data columnStyle =
     { name = name
     , viewData = data >> (\t -> text (Functions.defaultIntToString t))
@@ -88,7 +88,7 @@ intColumn name data columnStyle =
     }
 
 
-stringColumn : String -> ({ data | content_id : Int } -> Maybe String) -> ColumnStyle -> Column data msg
+stringColumn : String -> (data -> Maybe String) -> ColumnStyle -> Column data msg
 stringColumn name data columnStyle =
     { name = name
     , viewData = data >> (\t -> text (Maybe.withDefault "" t))
@@ -97,7 +97,7 @@ stringColumn name data columnStyle =
     }
 
 
-dateColumn : String -> ({ data | content_id : Int } -> Maybe String) -> ColumnStyle -> Column data msg
+dateColumn : String -> (data -> Maybe String) -> ColumnStyle -> Column data msg
 dateColumn name data columnStyle =
     { name = name
     , viewData = data >> (\t -> text (Functions.defaultDate t))
@@ -106,7 +106,7 @@ dateColumn name data columnStyle =
     }
 
 
-dateTimeColumn : String -> ({ data | content_id : Int } -> Maybe String) -> ColumnStyle -> Column data msg
+dateTimeColumn : String -> (data -> Maybe String) -> ColumnStyle -> Column data msg
 dateTimeColumn name data columnStyle =
     { name = name
     , viewData = data >> (\t -> text (Functions.defaultDateTime t))
@@ -115,7 +115,7 @@ dateTimeColumn name data columnStyle =
     }
 
 
-hrefColumn : String -> ({ data | content_id : Int } -> ( Maybe String, String )) -> ColumnStyle -> ({ data | content_id : Int } -> comparable) -> Column data msg
+hrefColumn : String -> (data -> ( Maybe String, String )) -> ColumnStyle -> (data -> comparable) -> Column data msg
 hrefColumn name data columnStyle toComparable =
     { name = name
     , viewData = data >> viewHrefColumn
@@ -130,7 +130,7 @@ viewHrefColumn ( urlData, textData ) =
         [ text textData ]
 
 
-checkColumn : String -> ({ data | content_id : Int } -> Bool) -> ColumnStyle -> Column data msg
+checkColumn : String -> (data -> Bool) -> ColumnStyle -> Column data msg
 checkColumn name data columnStyle =
     { name = name
     , viewData = data >> viewCheckColumn
@@ -148,7 +148,7 @@ viewCheckColumn isChecked =
         ]
 
 
-htmlColumn : String -> ({ data | content_id : Int } -> Html msg) -> ColumnStyle -> ({ data | content_id : Int } -> comparable) -> Column data msg
+htmlColumn : String -> (data -> Html msg) -> ColumnStyle -> (data -> comparable) -> Column data msg
 htmlColumn name data columnStyle toComparable =
     { name = name
     , viewData = data
@@ -161,13 +161,14 @@ type alias Config data msg =
     { domTableId : String
     , toolbar : List ( String, msg )
     , toMsg : State -> msg
-    , columns : List (Column { data | content_id : Int } msg)
+    , columns : List (Column data msg)
+    , toRowId : data -> Int
     }
 
 
 type Sorter data
     = None
-    | IncOrDec (List { data | content_id : Int } -> List { data | content_id : Int })
+    | IncOrDec (List data -> List data)
 
 
 
@@ -189,7 +190,20 @@ border t =
     attribute "border" t
 
 
-view : State -> List { data | content_id : Int } -> Config { data | content_id : Int } msg -> Maybe (Html msg) -> Html msg
+pageSelect : String -> RowsPerPage
+pageSelect str =
+    case Functions.maybeStringToInt str of
+        Just t ->
+            if t > 0 then
+                Exactly t
+            else
+                All
+
+        Nothing ->
+            All
+
+
+view : State -> List data -> Config data msg -> Maybe (Html msg) -> Html msg
 view state rows config maybeCustomRow =
     let
         sortedRows =
@@ -213,12 +227,12 @@ view state rows config maybeCustomRow =
                 [ div [ class "dataTables_length", id "searchResultsTable_length" ]
                     [ label []
                         [ text "Show"
-                        , select [ id "pageLengthSelect" ]
-                            [ option [ value "50", Events.onClick (config.toMsg { state | rowsPerPage = Exactly 50 }) ] [ text "50" ]
-                            , option [ value "100", Events.onClick (config.toMsg { state | rowsPerPage = Exactly 100 }) ] [ text "100" ]
-                            , option [ value "150", Events.onClick (config.toMsg { state | rowsPerPage = Exactly 150 }) ] [ text "150" ]
-                            , option [ value "200", Events.onClick (config.toMsg { state | rowsPerPage = Exactly 200 }) ] [ text "200" ]
-                            , option [ value "-1", Events.onClick (config.toMsg { state | rowsPerPage = All }) ] [ text "All" ]
+                        , select [ id "pageLengthSelect", Events.onInput (\t -> config.toMsg { state | rowsPerPage = pageSelect t }) ]
+                            [ option [ value "50" ] [ text "50" ]
+                            , option [ value "100" ] [ text "100" ]
+                            , option [ value "150" ] [ text "150" ]
+                            , option [ value "200" ] [ text "200" ]
+                            , option [ value "-1" ] [ text "All" ]
                             ]
                         ]
                     ]
@@ -246,12 +260,12 @@ view state rows config maybeCustomRow =
             ]
 
 
-viewTr : State -> List { data | content_id : Int } -> Config { data | content_id : Int } msg -> Maybe (Html msg) -> List (Html msg)
+viewTr : State -> List data -> Config data msg -> Maybe (Html msg) -> List (Html msg)
 viewTr state rows config maybeCustomRow =
     let
         selectedStyle row =
             style
-                (if Just row.content_id == state.selectedId then
+                (if Just (config.toRowId row) == state.selectedId then
                     [ ( "background-color", "#66aaff" )
                     , ( "background", "#66aaff" )
                     ]
@@ -270,7 +284,7 @@ viewTr state rows config maybeCustomRow =
                 [ rowClass ctr
                 , selectedStyle row
                 , classList
-                    [ ( "selected", Just row.content_id == state.selectedId )
+                    [ ( "selected", Just (config.toRowId row) == state.selectedId )
                     ]
                 ]
                 (List.map (viewTd state row config) config.columns)
@@ -324,7 +338,7 @@ columnStyle column =
             style t
 
 
-viewTh : State -> Config { data | content_id : Int } msg -> Column { data | content_id : Int } msg -> Html msg
+viewTh : State -> Config data msg -> Column data msg -> Html msg
 viewTh state config column =
     let
         thClass =
@@ -350,11 +364,14 @@ viewTh state config column =
             ]
 
 
-viewTd : State -> { data | content_id : Int } -> Config { data | content_id : Int } msg -> Column { data | content_id : Int } msg -> Html msg
+viewTd : State -> data -> Config data msg -> Column data msg -> Html msg
 viewTd state row config column =
     td
-        [ Events.onClick (config.toMsg { state | selectedId = Just row.content_id })
+        [ Events.onClick (config.toMsg { state | selectedId = Just (config.toRowId row) })
         , class "left"
+
+        --TODO, possibly remove 5/7/2018
+        , style [ ( "text-align", "center" ) ]
         ]
         [ column.viewData row ]
 
@@ -449,7 +466,7 @@ pagerText state totalRows =
                 "Showing " ++ currentPageText ++ " to " ++ totalItemsText ++ " of " ++ totalPagesText ++ " entries"
 
 
-pagingView : State -> Int -> List { data | content_id : Int } -> (State -> msg) -> Html msg
+pagingView : State -> Int -> List data -> (State -> msg) -> Html msg
 pagingView state totalRows rows toMsg =
     let
         lastIndex =
@@ -520,7 +537,7 @@ pagingView state totalRows rows toMsg =
 -- Sorting
 
 
-sort : State -> List (Column { data | content_id : Int } msg) -> List { data | content_id : Int } -> List { data | content_id : Int }
+sort : State -> List (Column data msg) -> List data -> List data
 sort state columnData data =
     case findSorter state.sortField columnData of
         Nothing ->
@@ -530,7 +547,7 @@ sort state columnData data =
             applySorter state.sortAscending sorter data
 
 
-applySorter : Bool -> Sorter { data | content_id : Int } -> List { data | content_id : Int } -> List { data | content_id : Int }
+applySorter : Bool -> Sorter data -> List data -> List data
 applySorter isReversed sorter data =
     case sorter of
         None ->
@@ -543,7 +560,7 @@ applySorter isReversed sorter data =
                 sort data
 
 
-findSorter : String -> List (Column { data | content_id : Int } msg) -> Maybe (Sorter { data | content_id : Int })
+findSorter : String -> List (Column data msg) -> Maybe (Sorter data)
 findSorter selectedColumn columnData =
     case columnData of
         [] ->
@@ -556,21 +573,21 @@ findSorter selectedColumn columnData =
                 findSorter selectedColumn remainingColumnData
 
 
-increasingOrDecreasingBy : ({ data | content_id : Int } -> comparable) -> Sorter data
+increasingOrDecreasingBy : (data -> comparable) -> Sorter data
 increasingOrDecreasingBy toComparable =
     IncOrDec (List.sortBy toComparable)
 
 
-defaultSort : ({ data | content_id : Int } -> Maybe String) -> Sorter data
+defaultSort : (data -> Maybe String) -> Sorter data
 defaultSort t =
     increasingOrDecreasingBy (Functions.defaultString << t)
 
 
-intSort : ({ data | content_id : Int } -> Maybe Int) -> Sorter data
+intSort : (data -> Maybe Int) -> Sorter data
 intSort t =
     increasingOrDecreasingBy (Functions.defaultIntToString << t)
 
 
-defaultBoolSort : ({ data | content_id : Int } -> Bool) -> Sorter data
+defaultBoolSort : (data -> Bool) -> Sorter data
 defaultBoolSort t =
     increasingOrDecreasingBy (toString << t)
