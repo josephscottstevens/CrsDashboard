@@ -16,10 +16,9 @@ cust_codes =
     [ "ABJ010", "DJA414", "GXD831", "ABJ002", "RANDO" ]
 
 
-subscriptions : Model -> Sub msg
+subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.batch
-        []
+    loadData LoadData
 
 
 type alias JsonData =
