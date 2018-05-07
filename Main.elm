@@ -1,14 +1,12 @@
 port module Main exposing (main)
 
-import Array exposing (Array)
-import Common.Functions as Functions
 import Common.Table as Table exposing (ColumnStyle(CustomStyle, Width))
 import Html exposing (Html, div, h1, input, text)
-import Html.Attributes exposing (placeholder)
+import Html.Attributes exposing (type_)
 import Html.Events exposing (onInput)
 
 
-port loadData : (List JsonData -> msg) -> Sub msg
+port loadData : (List Row -> msg) -> Sub msg
 
 
 cust_codes : List String
@@ -21,36 +19,30 @@ subscriptions model =
     loadData LoadData
 
 
-type alias JsonData =
-    { content_type : String
-    , content_id : Int
-    , content_key : String
-    , cust_code : String
-    }
-
-
 type alias Row =
     { content_id : Int
-    , items : Array Bool
+    , cust_codes : List String
     }
 
 
 type alias Model =
     { rows : List Row
     , tableState : Table.State
+    , filterStr : String
     }
 
 
 view : Model -> Html Msg
 view model =
     div []
-        [ Table.view model.tableState model.rows gridConfig Nothing
+        [ Table.view model.tableState model.rows (gridConfig model.filterStr) Nothing
         ]
 
 
 type Msg
     = SetTableState Table.State
-    | LoadData (List JsonData)
+    | LoadData (List Row)
+    | UpdateFilter String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -61,68 +53,50 @@ update msg model =
             , Cmd.none
             )
 
-        LoadData data ->
-            ( { model | rows = getRows data }
+        LoadData rows ->
+            ( { model | rows = rows }
+            , Cmd.none
+            )
+
+        UpdateFilter str ->
+            ( { model | filterStr = str }
             , Cmd.none
             )
 
 
-boolHelper : Int -> Row -> Maybe String
-boolHelper idx row =
-    case Array.get idx row.items of
-        Just t ->
-            if t == True then
-                Just "X"
-            else
-                Just ""
-
-        Nothing ->
-            Nothing
+rowHelper : String -> Row -> Maybe String
+rowHelper custCode row =
+    if List.member custCode row.cust_codes then
+        Just "X"
+    else
+        Nothing
 
 
-gridConfig : Table.Config Row Msg
-gridConfig =
+gridConfig : String -> Table.Config Row Msg
+gridConfig filterStr =
     { domTableId = "PresidentsTable"
-    , toolbar = []
+    , toolbar = input [ type_ "text", onInput UpdateFilter ] []
     , toMsg = SetTableState
     , columns =
         [ Table.stringColumn "Content ID" (\t -> Just (toString t.content_id)) (Width 1)
         ]
-            ++ List.indexedMap
-                (\idx custCode ->
-                    Table.stringColumn custCode (\t -> boolHelper idx t) (Width 1)
+            ++ List.map
+                (\custCode ->
+                    Table.stringColumn custCode (\t -> rowHelper custCode t) (Width 1)
                 )
-                cust_codes
+                (List.filter (\t -> String.contains filterStr t) cust_codes)
     , toRowId = .content_id
     }
 
 
 init : ( Model, Cmd msg )
 init =
-    ( emptyModel, Cmd.none )
-
-
-getRows : List JsonData -> List Row
-getRows items =
-    items
-        |> Functions.groupBy .content_id
-        |> List.map mapper
-
-
-mapper : ( Int, List JsonData ) -> Row
-mapper ( content_id, items ) =
-    let
-        custCodeItems =
-            List.map .cust_code items
-    in
-        Row content_id (Array.fromList (List.map (\t -> List.member t custCodeItems) cust_codes))
-
-
-emptyModel : Model
-emptyModel =
-    { rows = []
-    , tableState = Table.init "Year"
-    }
+    ( { rows = [ Row 1 [ "A", "ABJ002", "C" ] ]
+      , tableState = Table.init "Year"
+      , filterStr = ""
+      }
+    , Cmd.none
+    )
 
 
 main : Program Never Model Msg

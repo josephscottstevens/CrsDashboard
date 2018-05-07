@@ -159,7 +159,7 @@ htmlColumn name data columnStyle toComparable =
 
 type alias Config data msg =
     { domTableId : String
-    , toolbar : List ( String, msg )
+    , toolbar : Html msg
     , toMsg : State -> msg
     , columns : List (Column data msg)
     , toRowId : data -> Int
@@ -237,6 +237,7 @@ view state rows config maybeCustomRow =
                         ]
                     ]
                 , pagingView state totalRows filteredRows config.toMsg
+                , config.toolbar
                 ]
             , table
                 [ cellspacing "0"
