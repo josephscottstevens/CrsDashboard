@@ -203,8 +203,8 @@ pageSelect str =
             All
 
 
-view : State -> List data -> Config data msg -> Maybe (Html msg) -> Html msg
-view state rows config maybeCustomRow =
+view : State -> List data -> Config data msg -> Html msg
+view state rows config =
     let
         sortedRows =
             sort state config.columns rows
@@ -251,7 +251,7 @@ view state rows config maybeCustomRow =
                     [ tr [] (List.map (viewTh state config) config.columns)
                     ]
                 , tbody []
-                    (viewTr state filteredRows config maybeCustomRow)
+                    (viewTr state filteredRows config)
                 ]
             , div [ class "bottom" ]
                 [ div [ class "dataTables_info", id "searchResultsTable_info" ] [ text (pagerText state totalRows) ]
@@ -261,8 +261,8 @@ view state rows config maybeCustomRow =
             ]
 
 
-viewTr : State -> List data -> Config data msg -> Maybe (Html msg) -> List (Html msg)
-viewTr state rows config maybeCustomRow =
+viewTr : State -> List data -> Config data msg -> List (Html msg)
+viewTr state rows config =
     let
         selectedStyle row =
             style
@@ -289,41 +289,14 @@ viewTr state rows config maybeCustomRow =
                     ]
                 ]
                 (List.map (viewTd state row config) config.columns)
-
-        customRowStyle =
-            if List.length rows == 0 then
-                style []
-            else
-                style
-                    [ ( "border-bottom-color", "#cecece" )
-                    , ( "border-bottom-width", "1px" )
-                    , ( "border-bottom-style", "solid" )
-                    ]
-
-        customCellStyle =
-            style
-                [ ( "background-color", "white" )
-                , ( "padding-top", "10px" )
-                , ( "margin-left", "5px" )
-                ]
     in
-        case maybeCustomRow of
-            Just customRow ->
-                tr [ customRowStyle ]
-                    [ td [ colspan (List.length config.columns), customCellStyle ]
-                        [ customRow
-                        ]
-                    ]
-                    :: List.indexedMap standardTr rows
-
-            Nothing ->
-                if List.length rows == 0 then
-                    [ tr []
-                        [ td [] [ text "No records to display" ]
-                        ]
-                    ]
-                else
-                    List.indexedMap standardTr rows
+        if List.length rows == 0 then
+            [ tr []
+                [ td [] [ text "No records to display" ]
+                ]
+            ]
+        else
+            List.indexedMap standardTr rows
 
 
 columnStyle : { data | columnStyle : ColumnStyle } -> Html.Attribute msg

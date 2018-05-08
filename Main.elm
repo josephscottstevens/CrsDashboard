@@ -35,7 +35,7 @@ type alias Model =
 view : Model -> Html Msg
 view model =
     div []
-        [ Table.view model.tableState model.rows (gridConfig model.filterStr) Nothing
+        [ Table.view model.tableState model.rows (gridConfig model.filterStr)
         ]
 
 
