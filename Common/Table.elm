@@ -224,9 +224,9 @@ view state rows config =
     in
         div [ id "searchResultsTable_wrapper" ]
             [ div [ class "top" ]
-                [ div [ class "dataTables_length", id "searchResultsTable_length" ]
+                [ div [ class "detailsEntitlementToolbarLeft", id "searchResultsTable_length" ]
                     [ label []
-                        [ text "Show"
+                        [ text "Show "
                         , select [ id "pageLengthSelect", Events.onInput (\t -> config.toMsg { state | rowsPerPage = pageSelect t }) ]
                             [ option [ value "50" ] [ text "50" ]
                             , option [ value "100" ] [ text "100" ]

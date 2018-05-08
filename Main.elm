@@ -2,7 +2,7 @@ port module Main exposing (main)
 
 import Common.Table as Table exposing (ColumnStyle(CustomStyle, Width))
 import Html exposing (Html, div, h1, input, text, label)
-import Html.Attributes exposing (type_)
+import Html.Attributes exposing (type_, class)
 import Html.Events exposing (onInput, onClick)
 
 
@@ -97,16 +97,16 @@ gridConfig model =
             else
                 List.filter (\t -> String.contains model.filterStr t.code && t.client_active == True) model.clients
     in
-        { domTableId = "PresidentsTable"
+        { domTableId = "AccountEntitlementsTable"
         , toolbar =
-            div []
-                [ div []
-                    [ label [] [ text "Search" ]
-                    , input [ type_ "text", onInput UpdateFilter ] []
+            div [ class "detailsEntitlementToolbarRight" ]
+                [ div [ class "detailsEntitlementToolbarElementLeft" ]
+                    [ input [ type_ "checkbox", onClick ToggleShowInactive ] []
+                    , label [] [ text "Show Inactive Contacts" ]
                     ]
-                , div []
-                    [ label [] [ text "Show Inactive Contacts" ]
-                    , input [ type_ "checkbox", onClick ToggleShowInactive ] []
+                , div [ class "detailsEntitlementToolbarElementRight" ]
+                    [ label [] [ text "Search " ]
+                    , input [ type_ "text", onInput UpdateFilter ] []
                     ]
                 ]
         , toMsg = SetTableState
