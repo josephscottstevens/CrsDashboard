@@ -236,7 +236,8 @@ view state rows config =
                             ]
                         ]
                     ]
-                , pagingView state totalRows filteredRows config.toMsg
+
+                --, pagingView state totalRows filteredRows config.toMsg
                 , config.toolbar
                 ]
             , table
@@ -345,7 +346,7 @@ viewTd state row config column =
         , class "left"
 
         --TODO, possibly remove 5/7/2018
-        , style [ ( "text-align", "center" ) ]
+        , style [ ( "text-align", "left" ) ]
         ]
         [ column.viewData row ]
 

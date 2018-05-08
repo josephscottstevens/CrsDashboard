@@ -1,7 +1,7 @@
 port module Main exposing (main)
 
 import Common.Table as Table exposing (ColumnStyle(CustomStyle, Width))
-import Html exposing (Html, div, h1, input, text)
+import Html exposing (Html, div, h1, input, text, label)
 import Html.Attributes exposing (type_)
 import Html.Events exposing (onInput, onClick)
 
@@ -16,12 +16,19 @@ subscriptions model =
 
 type alias CustomerData =
     { code : String
+    , first_name : String
+    , last_name : String
     , client_active : Bool
     }
 
 
+functionCustomerData customer =
+    customer.first_name ++ " " ++ customer.last_name ++ "(" ++ customer.code ++ ")"
+
+
 type alias Row =
     { contentId : Int
+    , contentKey : Maybe String
     , customerCodes : List String
     }
 
@@ -93,16 +100,22 @@ gridConfig model =
         { domTableId = "PresidentsTable"
         , toolbar =
             div []
-                [ input [ type_ "text", onInput UpdateFilter ] []
-                , input [ type_ "checkbox", onClick ToggleShowInactive ] []
+                [ div []
+                    [ label [] [ text "Search" ]
+                    , input [ type_ "text", onInput UpdateFilter ] []
+                    ]
+                , div []
+                    [ label [] [ text "Show Inactive Contacts" ]
+                    , input [ type_ "checkbox", onClick ToggleShowInactive ] []
+                    ]
                 ]
         , toMsg = SetTableState
         , columns =
-            [ Table.stringColumn "Content ID" (\t -> Just (toString t.contentId)) (Width 1)
+            [ Table.stringColumn "" (\t -> t.contentKey) (Width 1)
             ]
                 ++ List.map
                     (\customer ->
-                        Table.stringColumn customer.code (\t -> rowHelper customer.code t) (Width 1)
+                        Table.stringColumn (functionCustomerData customer) (\t -> rowHelper customer.code t) (CustomStyle [ ( "width", "1%" ), ( "text-align", "center" ) ])
                     )
                     filteredColumns
         , toRowId = .contentId
@@ -115,7 +128,7 @@ init =
       , clients = []
       , tableState = Table.init "Year"
       , filterStr = ""
-      , showInactive = True
+      , showInactive = False
       }
     , Cmd.none
     )
