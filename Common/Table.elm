@@ -19,6 +19,7 @@ import Common.Functions as Functions
 import Html exposing (Html, a, div, input, label, option, select, span, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (attribute, checked, class, classList, colspan, disabled, href, id, rowspan, style, target, type_, value)
 import Html.Events as Events
+import Json.Encode as Encode
 
 
 -- Data Types
@@ -177,7 +178,8 @@ type Sorter data
 
 innerHtml : String -> Html.Attribute msg
 innerHtml t =
-    attribute "innerHTML" t
+    Encode.string t
+        |> Html.Attributes.property "innerHTML"
 
 
 cellspacing : String -> Html.Attribute msg
