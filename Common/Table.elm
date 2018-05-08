@@ -351,6 +351,7 @@ viewTd state row config column =
     td
         [ Events.onClick (config.toMsg { state | selectedId = Just (config.toRowId row) })
         , class "left"
+        , columnStyle column
         ]
         [ column.viewData row ]
 
