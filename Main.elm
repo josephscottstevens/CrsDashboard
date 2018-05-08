@@ -22,8 +22,9 @@ type alias CustomerData =
     }
 
 
-functionCustomerData customer =
-    customer.first_name ++ " " ++ customer.last_name ++ "(" ++ customer.code ++ ")"
+formatCustomerData : CustomerData -> String
+formatCustomerData customer =
+    customer.first_name ++ " " ++ customer.last_name ++ "</ br>(" ++ customer.code ++ ")"
 
 
 type alias Row =
@@ -115,7 +116,7 @@ gridConfig model =
             ]
                 ++ List.map
                     (\customer ->
-                        Table.stringColumn (functionCustomerData customer) (\t -> rowHelper customer.code t) (CustomStyle [ ( "width", "1%" ), ( "text-align", "center" ) ])
+                        Table.stringColumn (formatCustomerData customer) (\t -> rowHelper customer.code t) (CustomStyle [ ( "width", "1%" ), ( "text-align", "center" ) ])
                     )
                     filteredColumns
         , toRowId = .contentId
