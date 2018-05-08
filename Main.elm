@@ -24,7 +24,7 @@ type alias CustomerData =
 
 formatCustomerData : CustomerData -> String
 formatCustomerData customer =
-    customer.first_name ++ " " ++ customer.last_name ++ "</ br>(" ++ customer.code ++ ")"
+    customer.first_name ++ " " ++ customer.last_name ++ "<br />(" ++ customer.code ++ ")"
 
 
 type alias Row =
