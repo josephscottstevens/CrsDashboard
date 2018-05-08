@@ -175,6 +175,11 @@ type Sorter data
 -- VIEW
 
 
+innerHtml : String -> Html.Attribute msg
+innerHtml t =
+    attribute "innerHTML" t
+
+
 cellspacing : String -> Html.Attribute msg
 cellspacing t =
     attribute "cellspacing" t
@@ -334,9 +339,9 @@ viewTh state config column =
             , columnStyle column
             , rowspan 1
             , colspan 1
+            , innerHtml column.name
             ]
-            [ text column.name
-            ]
+            []
 
 
 viewTd : State -> data -> Config data msg -> Column data msg -> Html msg
@@ -344,9 +349,6 @@ viewTd state row config column =
     td
         [ Events.onClick (config.toMsg { state | selectedId = Just (config.toRowId row) })
         , class "left"
-
-        --TODO, possibly remove 5/7/2018
-        , style [ ( "text-align", "left" ) ]
         ]
         [ column.viewData row ]
 
