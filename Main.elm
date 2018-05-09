@@ -1,9 +1,9 @@
 port module Main exposing (main)
 
 import Common.Table as Table exposing (ColumnStyle(CustomStyle, Width))
-import Html exposing (Html, div, h1, input, text, label)
-import Html.Attributes exposing (type_, class)
-import Html.Events exposing (onInput, onClick)
+import Html exposing (Html, div, h1, input, label, text)
+import Html.Attributes exposing (class, type_)
+import Html.Events exposing (onClick, onInput)
 
 
 port loadData : (( List Row, List CustomerData ) -> msg) -> Sub msg
@@ -22,15 +22,11 @@ type alias CustomerData =
     }
 
 
-formatCustomerData : CustomerData -> String
-formatCustomerData customer =
-    customer.first_name ++ " " ++ customer.last_name ++ "<br />(" ++ customer.code ++ ")"
-
-
 type alias Row =
     { contentId : Int
     , contentKey : Maybe String
     , customerCode : List String
+    , content_active : String
     }
 
 
@@ -45,8 +41,19 @@ type alias Model =
 
 view : Model -> Html Msg
 view model =
+    let
+        filteredRows =
+            List.filter
+                (\t ->
+                    if model.showInactive then
+                        True
+                    else
+                        t.content_active == "Y"
+                )
+                model.rows
+    in
     div []
-        [ Table.view model.tableState model.rows (gridConfig model)
+        [ Table.view model.tableState filteredRows (gridConfig model)
         ]
 
 
@@ -81,45 +88,68 @@ update msg model =
             )
 
 
-rowHelper : String -> Row -> Maybe String
+filterColumns : Model -> List CustomerData -> List CustomerData
+filterColumns model items =
+    let
+        filterStr =
+            String.toLower model.filterStr
+
+        formatStr t =
+            String.toLower (t.code ++ t.first_name ++ " " ++ t.last_name)
+
+        contains t =
+            String.contains filterStr (formatStr t)
+
+        filterHelper t =
+            if model.showInactive == True then
+                contains t
+            else
+                contains t && t.client_active == True
+    in
+    List.filter filterHelper items
+
+
+formatCustomerData : CustomerData -> String
+formatCustomerData customer =
+    customer.first_name ++ " " ++ customer.last_name ++ "<br />(" ++ customer.code ++ ")"
+
+
+
+--TODO, sorting is broken
+
+
+rowHelper : String -> Row -> ( Maybe String, String )
 rowHelper custCode row =
     if List.member custCode row.customerCode then
-        Just "X"
+        ( Just "X", "" )
     else
-        Nothing
+        ( Nothing, "" )
 
 
 gridConfig : Model -> Table.Config Row Msg
 gridConfig model =
-    let
-        filteredColumns =
-            if model.showInactive == True then
-                List.filter (\t -> String.contains (String.toLower (model.filterStr)) (String.toLower (t.code ++ t.first_name ++ " " ++ t.last_name))) model.clients
-            else
-                List.filter (\t -> String.contains (String.toLower (model.filterStr)) (String.toLower (t.code ++ t.first_name ++ " " ++ t.last_name)) && t.client_active == True) model.clients
-    in
-        { domTableId = "AccountEntitlementsTable"
-        , toolbar =
-            [ div [ class "detailsEntitlementToolbarElementLeft" ]
-                [ input [ type_ "checkbox", onClick ToggleShowInactive ] []
-                , label [] [ text "Show Inactive Contacts" ]
-                ]
-            , div [ class "detailsEntitlementToolbarElementLeft" ]
-                [ label [] [ text "Contact Search " ]
-                , input [ type_ "text", onInput UpdateFilter ] []
-                ]
+    { domTableId = "AccountEntitlementsTable"
+    , toolbar =
+        [ div [ class "detailsEntitlementToolbarElementLeft" ]
+            [ input [ type_ "checkbox", onClick ToggleShowInactive ] []
+            , label [] [ text "Show Inactive Contacts" ]
             ]
-        , toMsg = SetTableState
-        , columns =
-            [ Table.stringColumn "" (\t -> t.contentKey) (CustomStyle [ ( "width", "1%" ), ( "border-right", "1px solid black" ) ])
+        , div [ class "detailsEntitlementToolbarElementLeft" ]
+            [ label [] [ text "Contact Search " ]
+            , input [ type_ "text", onInput UpdateFilter ] []
             ]
-                ++ List.map
-                    (\customer ->
-                        Table.stringColumn (formatCustomerData customer) (\t -> rowHelper customer.code t) (CustomStyle [ ( "width", "1%" ), ( "text-align", "center" ) ])
-                    )
-                    filteredColumns
-        , toRowId = .contentId
-        }
+        ]
+    , toMsg = SetTableState
+    , columns =
+        [ Table.stringColumn "" .contentKey (CustomStyle [ ( "width", "1%" ), ( "border-right", "1px solid black" ) ])
+        ]
+            ++ List.map
+                (\customer ->
+                    Table.hrefColumn (formatCustomerData customer) (\t -> rowHelper customer.code t) (CustomStyle [ ( "width", "1%" ), ( "text-align", "center" ) ]) .contentId
+                )
+                (filterColumns model model.clients)
+    , toRowId = .contentId
+    }
 
 
 init : ( Model, Cmd msg )
