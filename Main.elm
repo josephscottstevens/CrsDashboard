@@ -30,7 +30,7 @@ formatCustomerData customer =
 type alias Row =
     { contentId : Int
     , contentKey : Maybe String
-    , customerCodes : List String
+    , customerCode : List String
     }
 
 
@@ -83,7 +83,7 @@ update msg model =
 
 rowHelper : String -> Row -> Maybe String
 rowHelper custCode row =
-    if List.member custCode row.customerCodes then
+    if List.member custCode row.customerCode then
         Just "X"
     else
         Nothing
@@ -94,25 +94,24 @@ gridConfig model =
     let
         filteredColumns =
             if model.showInactive == True then
-                List.filter (\t -> String.contains model.filterStr t.code) model.clients
+                List.filter (\t -> String.contains (String.toLower (model.filterStr)) (String.toLower (t.code ++ t.first_name ++ " " ++ t.last_name))) model.clients
             else
-                List.filter (\t -> String.contains model.filterStr t.code && t.client_active == True) model.clients
+                List.filter (\t -> String.contains (String.toLower (model.filterStr)) (String.toLower (t.code ++ t.first_name ++ " " ++ t.last_name)) && t.client_active == True) model.clients
     in
         { domTableId = "AccountEntitlementsTable"
         , toolbar =
-            div [ class "detailsEntitlementToolbarRight" ]
-                [ div [ class "detailsEntitlementToolbarElementLeft" ]
-                    [ input [ type_ "checkbox", onClick ToggleShowInactive ] []
-                    , label [] [ text "Show Inactive Contacts" ]
-                    ]
-                , div [ class "detailsEntitlementToolbarElementRight" ]
-                    [ label [] [ text "Search " ]
-                    , input [ type_ "text", onInput UpdateFilter ] []
-                    ]
+            [ div [ class "detailsEntitlementToolbarElementLeft" ]
+                [ input [ type_ "checkbox", onClick ToggleShowInactive ] []
+                , label [] [ text "Show Inactive Contacts" ]
                 ]
+            , div [ class "detailsEntitlementToolbarElementLeft" ]
+                [ label [] [ text "Contact Search " ]
+                , input [ type_ "text", onInput UpdateFilter ] []
+                ]
+            ]
         , toMsg = SetTableState
         , columns =
-            [ Table.stringColumn "" (\t -> t.contentKey) (Width 1)
+            [ Table.stringColumn "" (\t -> t.contentKey) (CustomStyle [ ( "width", "1%" ), ( "border-right", "1px solid black" ) ])
             ]
                 ++ List.map
                     (\customer ->

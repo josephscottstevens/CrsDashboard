@@ -160,7 +160,7 @@ htmlColumn name data columnStyle toComparable =
 
 type alias Config data msg =
     { domTableId : String
-    , toolbar : Html msg
+    , toolbar : List (Html msg)
     , toMsg : State -> msg
     , columns : List (Column data msg)
     , toRowId : data -> Int
@@ -231,8 +231,8 @@ view state rows config =
     in
         div [ id "searchResultsTable_wrapper" ]
             [ div [ class "top" ]
-                [ div [ class "detailsEntitlementToolbarLeft", id "searchResultsTable_length" ]
-                    [ label []
+                [ div [ class "detailsEntitlementToolbarElement", id "searchResultsTable_length" ]
+                    ([ label []
                         [ text "Show "
                         , select [ id "pageLengthSelect", Events.onInput (\t -> config.toMsg { state | rowsPerPage = pageSelect t }) ]
                             [ option [ value "50" ] [ text "50" ]
@@ -242,10 +242,11 @@ view state rows config =
                             , option [ value "-1" ] [ text "All" ]
                             ]
                         ]
-                    ]
+                     ]
+                        ++ config.toolbar
+                    )
 
                 --, pagingView state totalRows filteredRows config.toMsg
-                , config.toolbar
                 ]
             , table
                 [ cellspacing "0"
