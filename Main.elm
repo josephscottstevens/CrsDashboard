@@ -54,9 +54,9 @@ view model =
                 )
                 model.rows
     in
-    div []
-        [ Table.view model.tableState filteredRows (gridConfig model)
-        ]
+        div []
+            [ Table.view model.tableState filteredRows (gridConfig model)
+            ]
 
 
 type Msg
@@ -105,7 +105,7 @@ filterColumns model items =
         filterHelper t =
             contains t && t.client_active == True
     in
-    List.filter filterHelper items
+        List.filter filterHelper items
 
 
 formatCustomerData : CustomerData -> String
@@ -132,7 +132,7 @@ rowHelper custCode row =
                     ""
                 ]
     in
-    Just str
+        Just str
 
 
 gridConfig : Model -> Table.Config Row Msg
