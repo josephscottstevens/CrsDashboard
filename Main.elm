@@ -124,12 +124,12 @@ rowHelper custCode row =
             String.concat
                 [ if List.member custCode row.customerCode then
                     if List.member "crsEntitlementContent" row.relationshipType && List.member "pushPreferenceContent" row.relationshipType then
-                        if List.length row.relationshipType > 1 then
+                        if List.length row.methodDesc > 1 then
                             "X HYPERLINK"
                         else
-                            case List.head row.relationshipType of
+                            case List.head row.methodDesc of
                                 Just t ->
-                                    "X" ++ t
+                                    "X " ++ t
 
                                 Nothing ->
                                     Debug.crash "bad data"
