@@ -54,9 +54,9 @@ view model =
                 )
                 model.rows
     in
-        div []
-            [ Table.view model.tableState filteredRows (gridConfig model)
-            ]
+    div []
+        [ Table.view model.tableState filteredRows (gridConfig model)
+        ]
 
 
 type Msg
@@ -105,7 +105,7 @@ filterColumns model items =
         filterHelper t =
             contains t && t.client_active == True
     in
-        List.filter filterHelper items
+    List.filter filterHelper items
 
 
 formatCustomerData : CustomerData -> String
@@ -124,15 +124,13 @@ rowHelper custCode row =
             String.concat
                 [ if List.member custCode row.customerCode then
                     "X"
-                  else
-                    ""
-                , if List.member "crsEntitlementContent" row.relationshipType && List.member "pushPreferenceContent" row.relationshipType then
-                    " HYPERLINK"
+                  else if List.member "crsEntitlementContent" row.relationshipType && List.member "pushPreferenceContent" row.relationshipType then
+                    "X HYPERLINK"
                   else
                     ""
                 ]
     in
-        Just str
+    Just str
 
 
 gridConfig : Model -> Table.Config Row Msg
