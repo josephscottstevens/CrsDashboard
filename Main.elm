@@ -117,29 +117,23 @@ formatCustomerData customer =
 --TODO, sorting is broken
 
 
-rowHelper : String -> Row -> Maybe String
+rowHelper : String -> Row -> String
 rowHelper custCode row =
-    let
-        str =
-            String.concat
-                [ if List.member custCode row.customerCode then
-                    if List.member "crsEntitlementContent" row.relationshipType && List.member "pushPreferenceContent" row.relationshipType then
-                        if List.length row.methodDesc > 1 then
-                            "X HYPERLINK"
-                        else
-                            case List.head row.methodDesc of
-                                Just t ->
-                                    "X " ++ t
+    if List.member custCode row.customerCode then
+        if List.member "crsEntitlementContent" row.relationshipType && List.member "pushPreferenceContent" row.relationshipType then
+            if List.length row.methodDesc > 1 then
+                "X HYPERLINK"
+            else
+                case List.head row.methodDesc of
+                    Just t ->
+                        "X " ++ t
 
-                                Nothing ->
-                                    Debug.crash "bad data"
-                    else
-                        "X"
-                  else
-                    ""
-                ]
-    in
-    Just str
+                    Nothing ->
+                        Debug.crash "bad data"
+        else
+            "X"
+    else
+        ""
 
 
 gridConfig : Model -> Table.Config Row Msg
@@ -161,7 +155,7 @@ gridConfig model =
         ]
             ++ List.map
                 (\customer ->
-                    Table.stringColumn (formatCustomerData customer) (\t -> rowHelper customer.code t) (CustomStyle [ ( "width", "1%" ), ( "text-align", "center" ) ])
+                    Table.stringColumn (formatCustomerData customer) (\t -> Just (rowHelper customer.code t)) (CustomStyle [ ( "width", "1%" ), ( "text-align", "center" ) ])
                 )
                 (filterColumns model model.clients)
     , toRowId = .contentId
