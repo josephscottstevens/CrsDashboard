@@ -124,7 +124,11 @@ rowHelper custCode row =
             String.concat
                 [ if List.member custCode row.customerCode then
                     "X"
-                  else if List.member "crsEntitlementContent" row.relationshipType && List.member "pushPreferenceContent" row.relationshipType then
+                  else if
+                    List.member custCode row.customerCode
+                        && List.member "crsEntitlementContent" row.relationshipType
+                        && List.member "pushPreferenceContent" row.relationshipType
+                  then
                     "X HYPERLINK"
                   else
                     ""
