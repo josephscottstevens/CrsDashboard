@@ -26,7 +26,9 @@ type alias Row =
     { contentId : Int
     , contentKey : Maybe String
     , customerCode : List String
-    , content_active : String
+    , contentActive : String
+    , relationshipType : List String --[{x:1, y:1}, {x:2, y:2}].map(t => t.y1 = t.y)
+    , methodDesc : List String
     }
 
 
@@ -48,13 +50,13 @@ view model =
                     if model.showInactive then
                         True
                     else
-                        t.content_active == "Y"
+                        t.contentActive == "Y"
                 )
                 model.rows
     in
-    div []
-        [ Table.view model.tableState filteredRows (gridConfig model)
-        ]
+        div []
+            [ Table.view model.tableState filteredRows (gridConfig model)
+            ]
 
 
 type Msg
@@ -101,12 +103,9 @@ filterColumns model items =
             String.contains filterStr (formatStr t)
 
         filterHelper t =
-            if model.showInactive == True then
-                contains t
-            else
-                contains t && t.client_active == True
+            contains t && t.client_active == True
     in
-    List.filter filterHelper items
+        List.filter filterHelper items
 
 
 formatCustomerData : CustomerData -> String
@@ -118,12 +117,24 @@ formatCustomerData customer =
 --TODO, sorting is broken
 
 
-rowHelper : String -> Row -> ( Maybe String, String )
+rowHelper : String -> Row -> Maybe String
 rowHelper custCode row =
-    if List.member custCode row.customerCode then
-        ( Just "X", "" )
-    else
-        ( Nothing, "" )
+    let
+        str =
+            String.concat
+            
+                [ if List.member custCode row.customerCode then
+                --if List.member "crsEntitlementContent" row.relationshipType then
+                --     Just "X HYPERLINK"
+                --else
+                Just "X"
+                , if List.member "crsEntitlementContent" row.relationshipType && List.member "pushPreferenceContent" row.relationshipType then
+                    "X " ++ toString (row.methodDesc)
+                  else
+                    ""
+                ]
+    in
+        Just str
 
 
 gridConfig : Model -> Table.Config Row Msg
@@ -132,7 +143,7 @@ gridConfig model =
     , toolbar =
         [ div [ class "detailsEntitlementToolbarElementLeft" ]
             [ input [ type_ "checkbox", onClick ToggleShowInactive ] []
-            , label [] [ text "Show Inactive Contacts" ]
+            , label [] [ text "Show Inactive Content" ]
             ]
         , div [ class "detailsEntitlementToolbarElementLeft" ]
             [ label [] [ text "Contact Search " ]
@@ -145,7 +156,7 @@ gridConfig model =
         ]
             ++ List.map
                 (\customer ->
-                    Table.hrefColumn (formatCustomerData customer) (\t -> rowHelper customer.code t) (CustomStyle [ ( "width", "1%" ), ( "text-align", "center" ) ]) .contentId
+                    Table.stringColumn (formatCustomerData customer) (\t -> rowHelper customer.code t) (CustomStyle [ ( "width", "1%" ), ( "text-align", "center" ) ])
                 )
                 (filterColumns model model.clients)
     , toRowId = .contentId
