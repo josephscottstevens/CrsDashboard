@@ -138,7 +138,7 @@ rowHelper custCode row =
         else
             "X"
     else
-        "Y"
+        ""
 
 
 contentHelper : Row -> Html Msg
@@ -180,24 +180,10 @@ gridConfig model =
     }
 
 
-
--- type alias Row =
---     { contentId : Int
---     , contentKey : Maybe String
---     , customerCode : List String
---     , contentActive : String
---     , relationshipType : List String --[{x:1, y:1}, {x:2, y:2}].map(t => t.y1 = t.y)
---     , methodDesc : List String
---     }
-
-
 init : ( Model, Cmd msg )
 init =
-    ( { rows = [ Row 0 (Just "a") [ "code1", "code2" ] "true" [ "code1", "test4" ] [ "hyperlink", "content" ] ]
-      , clients =
-            [ CustomerData "code1" "code2" "test3" False
-            , CustomerData "test4" "test5" "test6" False
-            ]
+    ( { rows = []
+      , clients = []
       , tableState = Table.init "Year"
       , filterStr = ""
       , showInactive = False
