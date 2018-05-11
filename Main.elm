@@ -56,14 +56,15 @@ view model =
                 (\t ->
                     if model.showInactive then
                         True
+
                     else
                         True
                 )
                 model.rows
     in
-        div []
-            [ Table.view model.tableState filteredRows (gridConfig model)
-            ]
+    div []
+        [ Table.view model.tableState filteredRows (gridConfig model)
+        ]
 
 
 type Msg
@@ -124,7 +125,7 @@ filterColumns model items =
         filterHelper t =
             contains t && t.client_active == True
     in
-        List.filter filterHelper items
+    List.filter filterHelper items
 
 
 formatCustomerData : CustomerData -> String
@@ -138,13 +139,14 @@ formatCustomerData customer =
 
 customerDataToHtml : CustomerData -> Html Msg
 customerDataToHtml customer =
-    a
-        [ href "javascript:void(0)"
-        , onClick (OpenContactItem customer.code)
-        ]
+    div []
         [ text (customer.first_name ++ " " ++ customer.last_name)
         , br [] []
-        , text (" (" ++ customer.code ++ ")")
+        , a
+            [ href "javascript:void(0)"
+            , onClick (OpenContactItem customer.code)
+            ]
+            [ text (" (" ++ customer.code ++ ")") ]
         ]
 
 
@@ -154,6 +156,7 @@ rowHelper custCode row =
         if List.member "crsEntitlementContent" row.relationshipType && List.member "pushPreferenceContent" row.relationshipType then
             if List.length row.methodDesc > 1 then
                 "X HYPERLINK"
+
             else
                 case List.head row.methodDesc of
                     Just t ->
@@ -161,8 +164,10 @@ rowHelper custCode row =
 
                     Nothing ->
                         Debug.crash "bad data"
+
         else
             "X"
+
     else
         ""
 
@@ -173,11 +178,11 @@ contentHelper t =
         contentKey =
             Maybe.withDefault "" t.contentKey
     in
-        a
-            [ href "javascript:void(0)"
-            , onClick (OpenItem contentKey)
-            ]
-            [ text contentKey ]
+    a
+        [ href "javascript:void(0)"
+        , onClick (OpenItem contentKey)
+        ]
+        [ text contentKey ]
 
 
 columns : Model -> List (Table.Column Row Msg)
