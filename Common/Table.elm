@@ -13,7 +13,6 @@ module Common.Table
         , intColumn
         , stringColumn
         , view
-        , onclick
         )
 
 import Common.Functions as Functions
@@ -21,6 +20,7 @@ import Html exposing (Html, a, div, input, label, option, select, span, table, t
 import Html.Attributes exposing (attribute, checked, class, classList, colspan, disabled, href, id, rowspan, style, target, type_, value)
 import Html.Events as Events
 import Json.Encode as Encode
+import Json.Decode as Decode
 
 
 -- Data Types
@@ -181,12 +181,6 @@ innerHtml : String -> Html.Attribute msg
 innerHtml t =
     Encode.string t
         |> Html.Attributes.property "innerHTML"
-
-
-onclick : String -> Html.Attribute msg
-onclick t =
-    Encode.string t
-        |> Html.Attributes.property "onclick"
 
 
 cellspacing : String -> Html.Attribute msg

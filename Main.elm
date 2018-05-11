@@ -9,6 +9,9 @@ import Html.Events exposing (onClick, onInput)
 port loadData : (( List Row, List CustomerData ) -> msg) -> Sub msg
 
 
+port openItem : String -> Cmd msg
+
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
     loadData LoadData
@@ -64,6 +67,7 @@ type Msg
     | LoadData ( List Row, List CustomerData )
     | UpdateFilter String
     | ToggleShowInactive
+    | OpenItem String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -87,6 +91,11 @@ update msg model =
         ToggleShowInactive ->
             ( { model | showInactive = not model.showInactive }
             , Cmd.none
+            )
+
+        OpenItem str ->
+            ( model
+            , openItem str
             )
 
 
@@ -129,10 +138,10 @@ rowHelper custCode row =
         else
             "X"
     else
-        ""
+        "Y"
 
 
-contentHelper : Row -> Html msg
+contentHelper : Row -> Html Msg
 contentHelper t =
     let
         contentKey =
@@ -140,7 +149,7 @@ contentHelper t =
     in
         a
             [ href "javascript:void(0)"
-            , Table.onclick ("openItem('content', '" ++ contentKey ++ "')")
+            , onClick (OpenItem contentKey)
             ]
             [ text contentKey ]
 
@@ -171,10 +180,24 @@ gridConfig model =
     }
 
 
+
+-- type alias Row =
+--     { contentId : Int
+--     , contentKey : Maybe String
+--     , customerCode : List String
+--     , contentActive : String
+--     , relationshipType : List String --[{x:1, y:1}, {x:2, y:2}].map(t => t.y1 = t.y)
+--     , methodDesc : List String
+--     }
+
+
 init : ( Model, Cmd msg )
 init =
-    ( { rows = []
-      , clients = []
+    ( { rows = [ Row 0 (Just "a") [ "code1", "code2" ] "true" [ "code1", "test4" ] [ "hyperlink", "content" ] ]
+      , clients =
+            [ CustomerData "code1" "code2" "test3" False
+            , CustomerData "test4" "test5" "test6" False
+            ]
       , tableState = Table.init "Year"
       , filterStr = ""
       , showInactive = False
