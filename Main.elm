@@ -1,8 +1,8 @@
 port module Main exposing (main)
 
 import Common.Table as Table exposing (ColumnStyle(CustomStyle, Width))
-import Html exposing (Html, div, h1, input, label, text)
-import Html.Attributes exposing (class, type_)
+import Html exposing (Html, div, h1, input, label, text, a)
+import Html.Attributes exposing (class, type_, href)
 import Html.Events exposing (onClick, onInput)
 
 
@@ -27,7 +27,7 @@ type alias Row =
     , contentKey : Maybe String
     , customerCode : List String
     , contentActive : String
-    , relationshipType : List String --[{x:1, y:1}, {x:2, y:2}].map(t => t.y1 = t.y)
+    , relationshipType : List String
     , methodDesc : List String
     }
 
@@ -113,10 +113,6 @@ formatCustomerData customer =
     customer.first_name ++ " " ++ customer.last_name ++ "<br />(" ++ "<a href=\"javascript:void(0)\" onclick=\"openItem('contact','" ++ customer.code ++ "')\">" ++ customer.code ++ "</a>" ++ ")"
 
 
-
---TODO, sorting is broken
-
-
 rowHelper : String -> Row -> String
 rowHelper custCode row =
     if List.member custCode row.customerCode then
@@ -136,6 +132,19 @@ rowHelper custCode row =
         ""
 
 
+contentHelper : Row -> Html msg
+contentHelper t =
+    let
+        contentKey =
+            Maybe.withDefault "" t.contentKey
+    in
+        a
+            [ href "javascript:void(0)"
+            , Table.onclick ("openItem('content', '" ++ contentKey ++ "')")
+            ]
+            [ text contentKey ]
+
+
 gridConfig : Model -> Table.Config Row Msg
 gridConfig model =
     { domTableId = "AccountEntitlementsTable"
@@ -151,7 +160,7 @@ gridConfig model =
         ]
     , toMsg = SetTableState
     , columns =
-        [ Table.stringColumn "" .contentKey (CustomStyle [ ( "width", "1%" ), ( "border-right", "1px solid black" ) ])
+        [ Table.htmlColumn "" contentHelper (CustomStyle [ ( "width", "1%" ), ( "border-right", "1px solid black" ) ]) (\t -> Maybe.withDefault "" t.contentKey)
         ]
             ++ List.map
                 (\customer ->

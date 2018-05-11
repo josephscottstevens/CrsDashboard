@@ -13,6 +13,7 @@ module Common.Table
         , intColumn
         , stringColumn
         , view
+        , onclick
         )
 
 import Common.Functions as Functions
@@ -180,6 +181,12 @@ innerHtml : String -> Html.Attribute msg
 innerHtml t =
     Encode.string t
         |> Html.Attributes.property "innerHTML"
+
+
+onclick : String -> Html.Attribute msg
+onclick t =
+    Encode.string t
+        |> Html.Attributes.property "onclick"
 
 
 cellspacing : String -> Html.Attribute msg
