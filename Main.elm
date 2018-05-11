@@ -142,9 +142,9 @@ customerDataToHtml customer =
         [ href "javascript:void(0)"
         , onClick (OpenContactItem customer.code)
         ]
-        [ text customer.code
+        [ text (customer.first_name ++ " " ++ customer.last_name)
         , br [] []
-        , text (" (" ++ customer.first_name ++ " " ++ customer.last_name ++ ")")
+        , text (" (" ++ customer.code ++ ")")
         ]
 
 
