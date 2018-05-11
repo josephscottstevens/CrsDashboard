@@ -2,7 +2,7 @@ port module Main exposing (main)
 
 import Common.Functions as Functions
 import Common.Table as Table exposing (ColumnStyle(CustomStyle, Width))
-import Html exposing (Html, a, div, h1, input, label, text)
+import Html exposing (Html, a, br, div, h1, input, label, text)
 import Html.Attributes exposing (class, href, type_)
 import Html.Events exposing (onClick, onInput)
 
@@ -142,7 +142,10 @@ customerDataToHtml customer =
         [ href "javascript:void(0)"
         , onClick (OpenContactItem customer.code)
         ]
-        [ text (customer.code ++ " (" ++ customer.first_name ++ " " ++ customer.last_name ++ ")") ]
+        [ text customer.code
+        , br [] []
+        , text (" (" ++ customer.first_name ++ " " ++ customer.last_name ++ ")")
+        ]
 
 
 rowHelper : String -> Row -> String
