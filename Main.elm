@@ -2,7 +2,7 @@ port module Main exposing (main)
 
 import Common.Functions as Functions
 import Common.Table as Table exposing (ColumnStyle(CustomStyle, Width))
-import Html exposing (Html, a, div, h1, input, label, text)
+import Html exposing (Html, a, div, h1, input, label, text, br)
 import Html.Attributes exposing (class, href, type_)
 import Html.Events exposing (onClick, onInput)
 
@@ -61,9 +61,9 @@ view model =
                 )
                 model.rows
     in
-    div []
-        [ Table.view model.tableState filteredRows (gridConfig model)
-        ]
+        div []
+            [ Table.view model.tableState filteredRows (gridConfig model)
+            ]
 
 
 type Msg
@@ -124,7 +124,7 @@ filterColumns model items =
         filterHelper t =
             contains t && t.client_active == True
     in
-    List.filter filterHelper items
+        List.filter filterHelper items
 
 
 formatCustomerData : CustomerData -> String
@@ -142,7 +142,7 @@ customerDataToHtml customer =
         [ href "javascript:void(0)"
         , onClick (OpenContactItem customer.code)
         ]
-        [ text (customer.code ++ " (" ++ customer.first_name ++ " " ++ customer.last_name ++ ")") ]
+        [ text (customer.first_name ++ " " ++ customer.last_name ++ br [ "(" ++ customer.code ++ ")" ] []) ]
 
 
 rowHelper : String -> Row -> String
@@ -170,11 +170,11 @@ contentHelper t =
         contentKey =
             Maybe.withDefault "" t.contentKey
     in
-    a
-        [ href "javascript:void(0)"
-        , onClick (OpenItem contentKey)
-        ]
-        [ text contentKey ]
+        a
+            [ href "javascript:void(0)"
+            , onClick (OpenItem contentKey)
+            ]
+            [ text contentKey ]
 
 
 columns : Model -> List (Table.Column Row Msg)
