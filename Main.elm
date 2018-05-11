@@ -188,7 +188,7 @@ columns model =
     ]
         ++ List.map
             (\customer ->
-                { header = text (formatCustomerData customer)
+                { header = customerDataToHtml customer
                 , viewData = (\t -> text (rowHelper customer.code t))
                 , columnStyle = (CustomStyle [ ( "width", "1%" ), ( "text-align", "center" ) ])
                 , sorter = Table.IncOrDec (List.sortBy (\t -> formatCustomerData customer))
