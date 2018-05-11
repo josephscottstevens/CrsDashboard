@@ -54,9 +54,9 @@ view model =
                 )
                 model.rows
     in
-    div []
-        [ Table.view model.tableState filteredRows (gridConfig model)
-        ]
+        div []
+            [ Table.view model.tableState filteredRows (gridConfig model)
+            ]
 
 
 type Msg
@@ -105,12 +105,12 @@ filterColumns model items =
         filterHelper t =
             contains t && t.client_active == True
     in
-    List.filter filterHelper items
+        List.filter filterHelper items
 
 
 formatCustomerData : CustomerData -> String
 formatCustomerData customer =
-    customer.first_name ++ " " ++ customer.last_name ++ "<br />(" ++ customer.code ++ ")"
+    customer.first_name ++ " " ++ customer.last_name ++ "<br />(" ++ "<a href=\"javascript:void(0)\" onclick=\"openItem('contact','" ++ customer.code ++ "')\">" ++ customer.code ++ "</a>" ++ ")"
 
 
 
