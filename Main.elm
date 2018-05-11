@@ -1,6 +1,7 @@
 port module Main exposing (main)
 
 import Common.Table as Table exposing (ColumnStyle(CustomStyle, Width))
+import Common.Functions as Functions
 import Html exposing (Html, div, h1, input, label, text, a)
 import Html.Attributes exposing (class, type_, href)
 import Html.Events exposing (onClick, onInput)
@@ -119,7 +120,16 @@ filterColumns model items =
 
 formatCustomerData : CustomerData -> String
 formatCustomerData customer =
-    customer.first_name ++ " " ++ customer.last_name ++ "<br />(" ++ "<a href=\"javascript:void(0)\" onclick=\"openItem('contact','" ++ customer.code ++ "')\">" ++ customer.code ++ "</a>" ++ ")"
+    customer.first_name ++ " " ++ customer.last_name
+
+
+
+--++ "<br />(" ++ "<a href=\"javascript:void(0)\" onclick=\"openItem('contact','" ++ customer.code ++ "')\">" ++ customer.code ++ "</a>" ++ ")"
+
+
+customerDataToHtml : CustomerData -> Html Msg
+customerDataToHtml customer =
+    text ""
 
 
 rowHelper : String -> Row -> String
@@ -154,6 +164,27 @@ contentHelper t =
             [ text contentKey ]
 
 
+columns : Model -> List (Table.Column Row Msg)
+columns model =
+    [ { header = text ""
+      , viewData = contentHelper
+      , columnStyle = CustomStyle [ ( "width", "1%" ), ( "border-right", "1px solid black" ) ]
+      , sorter = Table.IncOrDec (List.sortBy (\t -> Functions.defaultString t.contentKey))
+      , columnId = "content"
+      }
+    ]
+        ++ List.map
+            (\customer ->
+                { header = text (formatCustomerData customer)
+                , viewData = (\t -> text (rowHelper customer.code t))
+                , columnStyle = (CustomStyle [ ( "width", "1%" ), ( "text-align", "center" ) ])
+                , sorter = Table.IncOrDec (List.sortBy (\t -> formatCustomerData customer))
+                , columnId = formatCustomerData customer
+                }
+            )
+            (filterColumns model model.clients)
+
+
 gridConfig : Model -> Table.Config Row Msg
 gridConfig model =
     { domTableId = "AccountEntitlementsTable"
@@ -168,14 +199,7 @@ gridConfig model =
             ]
         ]
     , toMsg = SetTableState
-    , columns =
-        [ Table.htmlColumn "" contentHelper (CustomStyle [ ( "width", "1%" ), ( "border-right", "1px solid black" ) ]) (\t -> Maybe.withDefault "" t.contentKey)
-        ]
-            ++ List.map
-                (\customer ->
-                    Table.stringColumn (formatCustomerData customer) (\t -> Just (rowHelper customer.code t)) (CustomStyle [ ( "width", "1%" ), ( "text-align", "center" ) ])
-                )
-                (filterColumns model model.clients)
+    , columns = columns model
     , toRowId = .contentId
     }
 

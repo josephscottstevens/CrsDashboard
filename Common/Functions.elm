@@ -37,11 +37,11 @@ defaultLower str =
     String.toLower (defaultString str)
 
 
-defaultIntToString : Maybe Int -> String
-defaultIntToString int =
-    case int of
-        Just t ->
-            toString t
+maybeIntToString : Maybe Int -> String
+maybeIntToString maybeInt =
+    case maybeInt of
+        Just int ->
+            toString int
 
         Nothing ->
             ""

@@ -3,12 +3,13 @@ module Common.Table
         ( Column
         , ColumnStyle(..)
         , Config
+        , Sorter(..)
         , State
         , checkColumn
         , dateColumn
         , dateTimeColumn
         , hrefColumn
-        , htmlColumn
+          -- , htmlColumn
         , init
         , intColumn
         , stringColumn
@@ -20,7 +21,6 @@ import Html exposing (Html, a, div, input, label, option, select, span, table, t
 import Html.Attributes exposing (attribute, checked, class, classList, colspan, disabled, href, id, rowspan, style, target, type_, value)
 import Html.Events as Events
 import Json.Encode as Encode
-import Json.Decode as Decode
 
 
 -- Data Types
@@ -32,12 +32,12 @@ blockSize =
 
 
 init : String -> State
-init sortedColumnName =
+init sortedColumnheader =
     { selectedId = Nothing
     , openDropdownId = Nothing
     , pageIndex = 0
     , rowsPerPage = Exactly 50
-    , sortField = sortedColumnName
+    , sortField = sortedColumnheader
     , sortAscending = True
     }
 
@@ -74,55 +74,61 @@ type Page
 
 
 type alias Column data msg =
-    { name : String
+    { header : Html msg
     , viewData : data -> Html msg
     , columnStyle : ColumnStyle
     , sorter : Sorter data
+    , columnId : String
     }
 
 
 intColumn : String -> (data -> Maybe Int) -> ColumnStyle -> Column data msg
-intColumn name data columnStyle =
-    { name = name
-    , viewData = data >> (\t -> text (Functions.defaultIntToString t))
+intColumn header data columnStyle =
+    { header = text header
+    , viewData = data >> (\t -> text (Functions.maybeIntToString t))
     , columnStyle = columnStyle
     , sorter = intSort data
+    , columnId = header
     }
 
 
 stringColumn : String -> (data -> Maybe String) -> ColumnStyle -> Column data msg
-stringColumn name data columnStyle =
-    { name = name
+stringColumn header data columnStyle =
+    { header = text header
     , viewData = data >> (\t -> text (Maybe.withDefault "" t))
     , columnStyle = columnStyle
     , sorter = defaultSort data
+    , columnId = header
     }
 
 
 dateColumn : String -> (data -> Maybe String) -> ColumnStyle -> Column data msg
-dateColumn name data columnStyle =
-    { name = name
+dateColumn header data columnStyle =
+    { header = text header
     , viewData = data >> (\t -> text (Functions.defaultDate t))
     , columnStyle = columnStyle
     , sorter = defaultSort data
+    , columnId = header
     }
 
 
 dateTimeColumn : String -> (data -> Maybe String) -> ColumnStyle -> Column data msg
-dateTimeColumn name data columnStyle =
-    { name = name
+dateTimeColumn header data columnStyle =
+    { header = text header
     , viewData = data >> (\t -> text (Functions.defaultDateTime t))
     , columnStyle = columnStyle
     , sorter = defaultSort data
+    , columnId = header
     }
 
 
 hrefColumn : String -> (data -> ( Maybe String, String )) -> ColumnStyle -> (data -> comparable) -> Column data msg
-hrefColumn name data columnStyle toComparable =
-    { name = name
+hrefColumn header data columnStyle toComparable =
+    { header = text header
     , viewData = data >> viewHrefColumn
     , columnStyle = columnStyle
     , sorter = IncOrDec (List.sortBy toComparable)
+    , columnId = header
     }
 
 
@@ -133,11 +139,12 @@ viewHrefColumn ( urlData, textData ) =
 
 
 checkColumn : String -> (data -> Bool) -> ColumnStyle -> Column data msg
-checkColumn name data columnStyle =
-    { name = name
+checkColumn header data columnStyle =
+    { header = text header
     , viewData = data >> viewCheckColumn
     , columnStyle = columnStyle
     , sorter = defaultBoolSort data
+    , columnId = header
     }
 
 
@@ -150,13 +157,15 @@ viewCheckColumn isChecked =
         ]
 
 
-htmlColumn : String -> (data -> Html msg) -> ColumnStyle -> (data -> comparable) -> Column data msg
-htmlColumn name data columnStyle toComparable =
-    { name = name
-    , viewData = data
-    , columnStyle = columnStyle
-    , sorter = IncOrDec (List.sortBy toComparable)
-    }
+
+-- htmlColumn : Html msg -> (data -> Html msg) -> ColumnStyle -> (data -> comparable) -> String -> Column data msg
+-- htmlColumn headerHtml data columnStyle toComparable columnId =
+--     { header = headerHtml
+--     , viewData = data
+--     , columnStyle = columnStyle
+--     , sorter = IncOrDec (List.sortBy toComparable)
+--     , columnId = columnId
+--     }
 
 
 type alias Config data msg =
@@ -326,7 +335,7 @@ viewTh : State -> Config data msg -> Column data msg -> Html msg
 viewTh state config column =
     let
         thClass =
-            if state.sortField == column.name then
+            if state.sortField == column.columnId then
                 if not state.sortAscending then
                     class "left sorting_desc"
                 else
@@ -335,7 +344,7 @@ viewTh state config column =
                 class "left sorting"
 
         sortClick =
-            Events.onClick (config.toMsg { state | sortAscending = not state.sortAscending, sortField = column.name })
+            Events.onClick (config.toMsg { state | sortAscending = not state.sortAscending, sortField = column.columnId })
     in
         th
             [ thClass
@@ -343,9 +352,8 @@ viewTh state config column =
             , columnStyle column
             , rowspan 1
             , colspan 1
-            , innerHtml column.name
             ]
-            []
+            [ column.header ]
 
 
 viewTd : State -> data -> Config data msg -> Column data msg -> Html msg
@@ -548,8 +556,8 @@ findSorter selectedColumn columnData =
         [] ->
             Nothing
 
-        { name, sorter } :: remainingColumnData ->
-            if name == selectedColumn then
+        { columnId, sorter } :: remainingColumnData ->
+            if columnId == selectedColumn then
                 Just sorter
             else
                 findSorter selectedColumn remainingColumnData
@@ -567,7 +575,7 @@ defaultSort t =
 
 intSort : (data -> Maybe Int) -> Sorter data
 intSort t =
-    increasingOrDecreasingBy (Functions.defaultIntToString << t)
+    increasingOrDecreasingBy (Functions.maybeIntToString << t)
 
 
 defaultBoolSort : (data -> Bool) -> Sorter data
