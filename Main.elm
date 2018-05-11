@@ -13,6 +13,9 @@ port loadData : (( List Row, List CustomerData ) -> msg) -> Sub msg
 port openItem : String -> Cmd msg
 
 
+port openContactItem : String -> Cmd msg
+
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
     loadData LoadData
@@ -69,6 +72,7 @@ type Msg
     | UpdateFilter String
     | ToggleShowInactive
     | OpenItem String
+    | OpenContactItem String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -97,6 +101,11 @@ update msg model =
         OpenItem str ->
             ( model
             , openItem str
+            )
+
+        OpenContactItem str ->
+            ( model
+            , openContactItem str
             )
 
 
@@ -129,7 +138,11 @@ formatCustomerData customer =
 
 customerDataToHtml : CustomerData -> Html Msg
 customerDataToHtml customer =
-    text ""
+    a
+        [ href "javascript:void(0)"
+        , onClick (OpenContactItem customer.code)
+        ]
+        [ text customer.code ]
 
 
 rowHelper : String -> Row -> String

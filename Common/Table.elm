@@ -157,17 +157,6 @@ viewCheckColumn isChecked =
         ]
 
 
-
--- htmlColumn : Html msg -> (data -> Html msg) -> ColumnStyle -> (data -> comparable) -> String -> Column data msg
--- htmlColumn headerHtml data columnStyle toComparable columnId =
---     { header = headerHtml
---     , viewData = data
---     , columnStyle = columnStyle
---     , sorter = IncOrDec (List.sortBy toComparable)
---     , columnId = columnId
---     }
-
-
 type alias Config data msg =
     { domTableId : String
     , toolbar : List (Html msg)
