@@ -53,7 +53,7 @@ view model =
                     if model.showInactive then
                         True
                     else
-                        t.contentActive == "Y"
+                        True
                 )
                 model.rows
     in
@@ -158,11 +158,11 @@ gridConfig : Model -> Table.Config Row Msg
 gridConfig model =
     { domTableId = "AccountEntitlementsTable"
     , toolbar =
-        [ div [ class "detailsEntitlementToolbarElementLeft" ]
-            [ input [ type_ "checkbox", onClick ToggleShowInactive ] []
-            , label [] [ text "Show Inactive Content" ]
-            ]
-        , div [ class "detailsEntitlementToolbarElementLeft" ]
+        [ --div [ class "detailsEntitlementToolbarElementLeft" ]
+          --  [ input [ type_ "checkbox", onClick ToggleShowInactive ] []
+          --  , label [] [ text "Show Inactive Content" ]
+          --  ]
+          div [ class "detailsEntitlementToolbarElementLeft" ]
             [ label [] [ text "Contact Search " ]
             , input [ type_ "text", onInput UpdateFilter ] []
             ]
