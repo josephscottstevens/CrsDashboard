@@ -7,13 +7,18 @@ import Html.Attributes exposing (class, href, type_)
 import Html.Events exposing (onClick, onInput)
 
 
-port loadData : (( List Row, List CustomerData, String ) -> msg) -> Sub msg
+port loadData : (( List Row, List CustomerData ) -> msg) -> Sub msg
 
 
 port openItem : String -> Cmd msg
 
 
 port openContactItem : String -> Cmd msg
+
+
+type alias Flags =
+    { displayLength : String
+    }
 
 
 subscriptions : Model -> Sub Msg
@@ -57,19 +62,20 @@ view model =
                 (\t ->
                     if model.showInactive then
                         True
+
                     else
                         True
                 )
                 model.rows
     in
-        div []
-            [ Table.view model.tableState filteredRows (gridConfig model)
-            ]
+    div []
+        [ Table.view model.tableState filteredRows (gridConfig model)
+        ]
 
 
 type Msg
     = SetTableState Table.State
-    | LoadData ( List Row, List CustomerData, String )
+    | LoadData ( List Row, List CustomerData )
     | UpdateFilter String
     | ToggleShowInactive
     | OpenItem String
@@ -84,8 +90,8 @@ update msg model =
             , Cmd.none
             )
 
-        LoadData ( rows, clients, displayLength ) ->
-            ( { model | rows = rows, clients = clients, tableState = Table.init "Year" displayLength }
+        LoadData ( rows, clients ) ->
+            ( { model | rows = rows, clients = clients }
             , Cmd.none
             )
 
@@ -125,7 +131,7 @@ filterColumns model items =
         filterHelper t =
             contains t && t.client_active == True
     in
-        List.filter filterHelper items
+    List.filter filterHelper items
 
 
 formatCustomerData : CustomerData -> String
@@ -156,6 +162,7 @@ rowHelper custCode row =
         if List.member "crsEntitlementContent" row.relationshipType && List.member "pushPreferenceContent" row.relationshipType then
             if List.length row.methodDesc > 1 then
                 "X HYPERLINK"
+
             else
                 case List.head row.methodDesc of
                     Just t ->
@@ -163,8 +170,10 @@ rowHelper custCode row =
 
                     Nothing ->
                         Debug.crash "bad data"
+
         else
             "X"
+
     else
         ""
 
@@ -175,14 +184,15 @@ contentHelper row =
         contentKey =
             Maybe.withDefault "" row.contentKey
     in
-        if row.contentTypeId /= 11 then
-            a
-                [ href "javascript:void(0)"
-                , onClick (OpenItem contentKey)
-                ]
-                [ text contentKey ]
-        else
-            text contentKey
+    if row.contentTypeId /= 11 then
+        a
+            [ href "javascript:void(0)"
+            , onClick (OpenItem contentKey)
+            ]
+            [ text contentKey ]
+
+    else
+        text contentKey
 
 
 columns : Model -> List (Table.Column Row Msg)
@@ -210,6 +220,7 @@ sortMaybeString : String -> String
 sortMaybeString t =
     if t == "" then
         "ZZZZZZZZZZZ"
+
     else
         t
 
@@ -233,11 +244,11 @@ gridConfig model =
     }
 
 
-init : ( Model, Cmd msg )
-init =
+init : Flags -> ( Model, Cmd Msg )
+init flags =
     ( { rows = []
       , clients = []
-      , tableState = Table.init "Year" "50"
+      , tableState = Table.init "Year" flags.displayLength
       , filterStr = ""
       , showInactive = False
       }
@@ -245,9 +256,9 @@ init =
     )
 
 
-main : Program Never Model Msg
+main : Program Flags Model Msg
 main =
-    Html.program
+    Html.programWithFlags
         { init = init
         , update = update
         , view = view
