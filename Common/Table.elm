@@ -18,7 +18,7 @@ module Common.Table
 
 import Common.Functions as Functions
 import Html exposing (Html, a, div, input, label, option, select, span, table, tbody, td, text, th, thead, tr)
-import Html.Attributes exposing (attribute, checked, class, classList, colspan, disabled, href, id, rowspan, style, target, type_, value)
+import Html.Attributes exposing (attribute, checked, class, classList, colspan, disabled, href, id, rowspan, style, target, type_, value, selected)
 import Html.Events as Events
 import Json.Encode as Encode
 
@@ -210,6 +210,16 @@ pageSelect str =
             All
 
 
+viewSelect : RowsPerPage -> String
+viewSelect rowsPerPage =
+    case rowsPerPage of
+        Exactly t ->
+            toString (t)
+
+        All ->
+            "-1"
+
+
 view : State -> List data -> Config data msg -> Html msg
 view state rows config =
     let
@@ -228,6 +238,9 @@ view state rows config =
 
         totalRows =
             List.length rows
+
+        optionLength =
+            viewSelect state.rowsPerPage
     in
         div [ id "searchResultsTable_wrapper" ]
             [ div [ class "top" ]
@@ -235,11 +248,13 @@ view state rows config =
                     ([ label []
                         [ text "Show "
                         , select [ id "pageLengthSelect", Events.onInput (\t -> config.toMsg { state | rowsPerPage = pageSelect t }) ]
-                            [ option [ value "50" ] [ text "50" ]
-                            , option [ value "100" ] [ text "100" ]
-                            , option [ value "150" ] [ text "150" ]
-                            , option [ value "200" ] [ text "200" ]
-                            , option [ value "-1" ] [ text "All" ]
+                            [ option
+                                [ value "50", selected (optionLength == "50") ]
+                                [ text "50" ]
+                            , option [ value "100", selected (optionLength == "100") ] [ text "100" ]
+                            , option [ value "150", selected (optionLength == "150") ] [ text "150" ]
+                            , option [ value "200", selected (optionLength == "200") ] [ text "200" ]
+                            , option [ value "-1", selected (optionLength == "-1") ] [ text "All" ]
                             ]
                         ]
                      ]
