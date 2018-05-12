@@ -61,16 +61,15 @@ view model =
             List.filter
                 (\t ->
                     if model.showInactive then
-                        True
-
+                        t.contentActive == "Y"
                     else
-                        True
+                        t.contentActive == "Y"
                 )
                 model.rows
     in
-    div []
-        [ Table.view model.tableState filteredRows (gridConfig model)
-        ]
+        div []
+            [ Table.view model.tableState filteredRows (gridConfig model)
+            ]
 
 
 type Msg
@@ -131,7 +130,7 @@ filterColumns model items =
         filterHelper t =
             contains t && t.client_active == True
     in
-    List.filter filterHelper items
+        List.filter filterHelper items
 
 
 formatCustomerData : CustomerData -> String
@@ -162,7 +161,6 @@ rowHelper custCode row =
         if List.member "crsEntitlementContent" row.relationshipType && List.member "pushPreferenceContent" row.relationshipType then
             if List.length row.methodDesc > 1 then
                 "X HYPERLINK"
-
             else
                 case List.head row.methodDesc of
                     Just t ->
@@ -170,10 +168,8 @@ rowHelper custCode row =
 
                     Nothing ->
                         Debug.crash "bad data"
-
         else
             "X"
-
     else
         ""
 
@@ -184,15 +180,14 @@ contentHelper row =
         contentKey =
             Maybe.withDefault "" row.contentKey
     in
-    if row.contentTypeId /= 11 then
-        a
-            [ href "javascript:void(0)"
-            , onClick (OpenItem contentKey)
-            ]
-            [ text contentKey ]
-
-    else
-        text contentKey
+        if row.contentTypeId /= 11 then
+            a
+                [ href "javascript:void(0)"
+                , onClick (OpenItem contentKey)
+                ]
+                [ text contentKey ]
+        else
+            text contentKey
 
 
 columns : Model -> List (Table.Column Row Msg)
@@ -220,7 +215,6 @@ sortMaybeString : String -> String
 sortMaybeString t =
     if t == "" then
         "ZZZZZZZZZZZ"
-
     else
         t
 
