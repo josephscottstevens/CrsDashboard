@@ -31,15 +31,16 @@ blockSize =
     15
 
 
-init : String -> State
-init sortedColumnheader =
-    { selectedId = Nothing
-    , openDropdownId = Nothing
-    , pageIndex = 0
-    , rowsPerPage = Exactly 50
-    , sortField = sortedColumnheader
-    , sortAscending = True
-    }
+init : String -> String -> State
+init sortedColumnheader displayLength =
+    Debug.log "" <|
+        { selectedId = Nothing
+        , openDropdownId = Nothing
+        , pageIndex = 0
+        , rowsPerPage = pageSelect (displayLength)
+        , sortField = sortedColumnheader
+        , sortAscending = True
+        }
 
 
 type RowsPerPage

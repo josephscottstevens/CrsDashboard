@@ -7,7 +7,7 @@ import Html.Attributes exposing (class, href, type_)
 import Html.Events exposing (onClick, onInput)
 
 
-port loadData : (( List Row, List CustomerData ) -> msg) -> Sub msg
+port loadData : (( List Row, List CustomerData, String ) -> msg) -> Sub msg
 
 
 port openItem : String -> Cmd msg
@@ -36,6 +36,7 @@ type alias Row =
     , contentActive : String
     , relationshipType : List String
     , methodDesc : List String
+    , contentTypeId : Int
     }
 
 
@@ -56,20 +57,19 @@ view model =
                 (\t ->
                     if model.showInactive then
                         True
-
                     else
                         True
                 )
                 model.rows
     in
-    div []
-        [ Table.view model.tableState filteredRows (gridConfig model)
-        ]
+        div []
+            [ Table.view model.tableState filteredRows (gridConfig model)
+            ]
 
 
 type Msg
     = SetTableState Table.State
-    | LoadData ( List Row, List CustomerData )
+    | LoadData ( List Row, List CustomerData, String )
     | UpdateFilter String
     | ToggleShowInactive
     | OpenItem String
@@ -84,8 +84,8 @@ update msg model =
             , Cmd.none
             )
 
-        LoadData ( rows, clients ) ->
-            ( { model | rows = rows, clients = clients }
+        LoadData ( rows, clients, displayLength ) ->
+            ( { model | rows = rows, clients = clients, tableState = Table.init "Year" displayLength }
             , Cmd.none
             )
 
@@ -125,7 +125,7 @@ filterColumns model items =
         filterHelper t =
             contains t && t.client_active == True
     in
-    List.filter filterHelper items
+        List.filter filterHelper items
 
 
 formatCustomerData : CustomerData -> String
@@ -156,7 +156,6 @@ rowHelper custCode row =
         if List.member "crsEntitlementContent" row.relationshipType && List.member "pushPreferenceContent" row.relationshipType then
             if List.length row.methodDesc > 1 then
                 "X HYPERLINK"
-
             else
                 case List.head row.methodDesc of
                     Just t ->
@@ -164,25 +163,26 @@ rowHelper custCode row =
 
                     Nothing ->
                         Debug.crash "bad data"
-
         else
             "X"
-
     else
         ""
 
 
 contentHelper : Row -> Html Msg
-contentHelper t =
+contentHelper row =
     let
         contentKey =
-            Maybe.withDefault "" t.contentKey
+            Maybe.withDefault "" row.contentKey
     in
-    a
-        [ href "javascript:void(0)"
-        , onClick (OpenItem contentKey)
-        ]
-        [ text contentKey ]
+        if row.contentTypeId /= 11 then
+            a
+                [ href "javascript:void(0)"
+                , onClick (OpenItem contentKey)
+                ]
+                [ text contentKey ]
+        else
+            text contentKey
 
 
 columns : Model -> List (Table.Column Row Msg)
@@ -199,11 +199,19 @@ columns model =
                 { header = customerDataToHtml customer
                 , viewData = \t -> text (rowHelper customer.code t)
                 , columnStyle = CustomStyle [ ( "width", "1%" ), ( "text-align", "center" ) ]
-                , sorter = Table.IncOrDec (List.sortBy (\t -> formatCustomerData customer))
+                , sorter = Table.IncOrDec (List.sortBy (\t -> sortMaybeString (rowHelper customer.code t)))
                 , columnId = formatCustomerData customer
                 }
             )
             (filterColumns model model.clients)
+
+
+sortMaybeString : String -> String
+sortMaybeString t =
+    if t == "" then
+        "ZZZZZZZZZZZ"
+    else
+        t
 
 
 gridConfig : Model -> Table.Config Row Msg
@@ -229,7 +237,7 @@ init : ( Model, Cmd msg )
 init =
     ( { rows = []
       , clients = []
-      , tableState = Table.init "Year"
+      , tableState = Table.init "Year" "50"
       , filterStr = ""
       , showInactive = False
       }
