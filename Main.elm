@@ -2,7 +2,7 @@ port module Main exposing (main)
 
 import Common.Functions as Functions
 import Common.Table as Table exposing (ColumnStyle(CustomStyle, Width))
-import Html exposing (Html, a, br, div, h1, input, label, text)
+import Html exposing (Html, a, br, div, h1, input, label, text, button)
 import Html.Attributes exposing (class, href, type_)
 import Html.Events exposing (onClick, onInput)
 
@@ -230,6 +230,10 @@ gridConfig model =
           div [ class "detailsEntitlementToolbarElementLeft" ]
             [ label [] [ text "Contact Search " ]
             , input [ type_ "text", onInput UpdateFilter ] []
+            ]
+        , div [ class "detailsEntitlementToolbarElementLeft" ]
+            [ label [] [ text "" ]
+            , button [] [ text "Export To Excel" ]
             ]
         ]
     , toMsg = SetTableState

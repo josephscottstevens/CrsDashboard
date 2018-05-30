@@ -313,10 +313,22 @@ viewTr state rows config =
                     ]
                 ]
                 (List.map (viewTd state row config) config.columns)
+
+        columnCount =
+            if List.length config.columns == 0 then
+                1
+            else
+                List.length config.columns
     in
         if List.length rows == 0 then
-            [ tr []
-                [ td [] [ text "No records to display" ]
+            [ tr [ class "odd" ]
+                [ td
+                    [ class "dataTables_empty"
+                    , colspan (columnCount)
+                    ]
+                    [ text "No data available in table" ]
+
+                --<td valign="top" colspan="5" class="dataTables_empty">No data available in table</td>
                 ]
             ]
         else
