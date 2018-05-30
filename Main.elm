@@ -2,7 +2,7 @@ port module Main exposing (main)
 
 import Common.Functions as Functions
 import Common.Table as Table exposing (ColumnStyle(CustomStyle, Width))
-import Html exposing (Html, a, br, div, h1, input, label, text, button)
+import Html exposing (Html, a, br, button, div, h1, input, label, text)
 import Html.Attributes exposing (class, href, type_)
 import Html.Events exposing (onClick, onInput)
 
@@ -14,6 +14,9 @@ port openItem : String -> Cmd msg
 
 
 port openContactItem : String -> Cmd msg
+
+
+port excelExport : List (List String) -> Cmd msg
 
 
 type alias Flags =
@@ -67,9 +70,9 @@ view model =
                 )
                 model.rows
     in
-        div []
-            [ Table.view model.tableState filteredRows (gridConfig model)
-            ]
+    div []
+        [ Table.view model.tableState filteredRows (gridConfig model)
+        ]
 
 
 type Msg
@@ -79,6 +82,7 @@ type Msg
     | ToggleShowInactive
     | OpenItem String
     | OpenContactItem String
+    | ExcelExport (List (List String))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -114,6 +118,11 @@ update msg model =
             , openContactItem str
             )
 
+        ExcelExport items ->
+            ( model
+            , excelExport items
+            )
+
 
 filterColumns : Model -> List CustomerData -> List CustomerData
 filterColumns model items =
@@ -130,7 +139,7 @@ filterColumns model items =
         filterHelper t =
             contains t && t.client_active == True
     in
-        List.filter filterHelper items
+    List.filter filterHelper items
 
 
 formatCustomerData : CustomerData -> String
@@ -180,14 +189,28 @@ contentHelper row =
         contentKey =
             Maybe.withDefault "" row.contentKey
     in
-        if row.contentTypeId /= 11 then
-            a
-                [ href "javascript:void(0)"
-                , onClick (OpenItem contentKey)
-                ]
-                [ text contentKey ]
-        else
-            text contentKey
+    if row.contentTypeId /= 11 then
+        a
+            [ href "javascript:void(0)"
+            , onClick (OpenItem contentKey)
+            ]
+            [ text contentKey ]
+    else
+        text contentKey
+
+
+excelExportData : Model -> List (List String)
+excelExportData model =
+    List.map (\row -> rowToList model row) model.rows
+
+
+rowToList : Model -> Row -> List String
+rowToList model row =
+    [ Maybe.withDefault "" row.contentKey
+    ]
+        ++ List.map
+            (\customer -> rowHelper customer.code row)
+            (filterColumns model model.clients)
 
 
 columns : Model -> List (Table.Column Row Msg)
@@ -233,7 +256,7 @@ gridConfig model =
             ]
         , div [ class "detailsEntitlementToolbarElementLeft" ]
             [ label [] [ text "" ]
-            , button [] [ text "Export To Excel" ]
+            , button [ onClick (ExcelExport (excelExportData model)) ] [ text "Export To Excel" ]
             ]
         ]
     , toMsg = SetTableState
