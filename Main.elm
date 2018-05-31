@@ -70,9 +70,9 @@ view model =
                 )
                 model.rows
     in
-    div []
-        [ Table.view model.tableState filteredRows (gridConfig model)
-        ]
+        div []
+            [ Table.view model.tableState filteredRows (gridConfig model)
+            ]
 
 
 type Msg
@@ -139,7 +139,7 @@ filterColumns model items =
         filterHelper t =
             contains t && t.client_active == True
     in
-    List.filter filterHelper items
+        List.filter filterHelper items
 
 
 formatCustomerData : CustomerData -> String
@@ -149,6 +149,11 @@ formatCustomerData customer =
 
 
 --++ "<br />(" ++ "<a href=\"javascript:void(0)\" onclick=\"openItem('contact','" ++ customer.code ++ "')\">" ++ customer.code ++ "</a>" ++ ")"
+
+
+customerDataToString : CustomerData -> String
+customerDataToString customer =
+    formatCustomerData customer ++ (" (" ++ customer.code ++ ")")
 
 
 customerDataToHtml : CustomerData -> Html Msg
@@ -189,19 +194,25 @@ contentHelper row =
         contentKey =
             Maybe.withDefault "" row.contentKey
     in
-    if row.contentTypeId /= 11 then
-        a
-            [ href "javascript:void(0)"
-            , onClick (OpenItem contentKey)
-            ]
-            [ text contentKey ]
-    else
-        text contentKey
+        if row.contentTypeId /= 11 then
+            a
+                [ href "javascript:void(0)"
+                , onClick (OpenItem contentKey)
+                ]
+                [ text contentKey ]
+        else
+            text contentKey
 
 
 excelExportData : Model -> List (List String)
 excelExportData model =
-    List.map (\row -> rowToList model row) model.rows
+    [ modelToHeader model ]
+        ++ List.map (\row -> rowToList model row) model.rows
+
+
+modelToHeader : Model -> List String
+modelToHeader model =
+    [ "" ] ++ (List.map (\client -> customerDataToString client) (List.filter (\t -> t.client_active) model.clients))
 
 
 rowToList : Model -> Row -> List String
