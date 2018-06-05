@@ -10,9 +10,6 @@ import Html.Events exposing (onClick, onInput)
 port loadData : (( List Row, List CustomerData ) -> msg) -> Sub msg
 
 
-port openItem : String -> Cmd msg
-
-
 port openContactItem : String -> Cmd msg
 
 
@@ -110,7 +107,7 @@ update msg model =
 
         OpenItem str ->
             ( model
-            , openItem str
+            , Functions.openItem str
             )
 
         OpenContactItem str ->

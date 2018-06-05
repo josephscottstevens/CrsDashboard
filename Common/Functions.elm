@@ -1,8 +1,11 @@
-module Common.Functions exposing (..)
+port module Common.Functions exposing (..)
 
 import Date
 import Date.Extra
 import Dict exposing (Dict)
+
+
+port openItem : String -> Cmd msg
 
 
 groupBy : (a -> comparable) -> List a -> List ( comparable, List a )
@@ -24,7 +27,7 @@ groupByDict fun =
         foldF e =
             Dict.update (fun e) (add2Maybe e)
     in
-        List.foldl foldF Dict.empty
+    List.foldl foldF Dict.empty
 
 
 defaultString : Maybe String -> String
