@@ -21,6 +21,7 @@ port excelExport : List (List String) -> Cmd msg
 
 type alias Flags =
     { displayLength : String
+    , showExportBtnToggle : Bool
     }
 
 
@@ -54,6 +55,7 @@ type alias Model =
     , tableState : Table.State
     , filterStr : String
     , showInactive : Bool
+    , showExportBtnToggle : Bool
     }
 
 
@@ -267,7 +269,10 @@ gridConfig model =
             ]
         , div [ class "detailsEntitlementToolbarElementLeft" ]
             [ label [] [ text "" ]
-            , button [ onClick (ExcelExport (excelExportData model)) ] [ text "Export To Excel" ]
+            , if model.showExportBtnToggle then
+                button [ onClick (ExcelExport (excelExportData model)) ] [ text "Export To Excel" ]
+              else
+                text ""
             ]
         ]
     , toMsg = SetTableState
@@ -283,6 +288,7 @@ init flags =
       , tableState = Table.init "Year" flags.displayLength
       , filterStr = ""
       , showInactive = False
+      , showExportBtnToggle = flags.showExportBtnToggle
       }
     , Cmd.none
     )
