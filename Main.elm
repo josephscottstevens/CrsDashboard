@@ -18,6 +18,7 @@ port excelExport : List (List String) -> Cmd msg
 
 type alias Flags =
     { displayLength : String
+    , showExportBtnToggle : Bool
     }
 
 
@@ -51,6 +52,7 @@ type alias Model =
     , tableState : Table.State
     , filterStr : String
     , showInactive : Bool
+    , showExportBtnToggle : Bool
     }
 
 
@@ -67,9 +69,9 @@ view model =
                 )
                 model.rows
     in
-    div []
-        [ Table.view model.tableState filteredRows (gridConfig model)
-        ]
+        div []
+            [ Table.view model.tableState filteredRows (gridConfig model)
+            ]
 
 
 type Msg
@@ -136,7 +138,7 @@ filterColumns model items =
         filterHelper t =
             contains t && t.client_active == True
     in
-    List.filter filterHelper items
+        List.filter filterHelper items
 
 
 formatCustomerData : CustomerData -> String
@@ -146,6 +148,11 @@ formatCustomerData customer =
 
 
 --++ "<br />(" ++ "<a href=\"javascript:void(0)\" onclick=\"openItem('contact','" ++ customer.code ++ "')\">" ++ customer.code ++ "</a>" ++ ")"
+
+
+customerDataToString : CustomerData -> String
+customerDataToString customer =
+    formatCustomerData customer ++ (" (" ++ customer.code ++ ")")
 
 
 customerDataToHtml : CustomerData -> Html Msg
@@ -186,19 +193,25 @@ contentHelper row =
         contentKey =
             Maybe.withDefault "" row.contentKey
     in
-    if row.contentTypeId /= 11 then
-        a
-            [ href "javascript:void(0)"
-            , onClick (OpenItem contentKey)
-            ]
-            [ text contentKey ]
-    else
-        text contentKey
+        if row.contentTypeId /= 11 then
+            a
+                [ href "javascript:void(0)"
+                , onClick (OpenItem contentKey)
+                ]
+                [ text contentKey ]
+        else
+            text contentKey
 
 
 excelExportData : Model -> List (List String)
 excelExportData model =
-    List.map (\row -> rowToList model row) model.rows
+    [ modelToHeader model ]
+        ++ List.map (\row -> rowToList model row) model.rows
+
+
+modelToHeader : Model -> List String
+modelToHeader model =
+    [ "" ] ++ (List.map (\client -> customerDataToString client) (List.filter (\t -> t.client_active) model.clients))
 
 
 rowToList : Model -> Row -> List String
@@ -253,7 +266,10 @@ gridConfig model =
             ]
         , div [ class "detailsEntitlementToolbarElementLeft" ]
             [ label [] [ text "" ]
-            , button [ onClick (ExcelExport (excelExportData model)) ] [ text "Export To Excel" ]
+            , if model.showExportBtnToggle then
+                button [ onClick (ExcelExport (excelExportData model)) ] [ text "Export To Excel" ]
+              else
+                text ""
             ]
         ]
     , toMsg = SetTableState
@@ -269,6 +285,7 @@ init flags =
       , tableState = Table.init "Year" flags.displayLength
       , filterStr = ""
       , showInactive = False
+      , showExportBtnToggle = flags.showExportBtnToggle
       }
     , Cmd.none
     )
