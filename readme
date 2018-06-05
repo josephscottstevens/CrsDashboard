@@ -1,0 +1,2 @@
+Example Command to test app locally
+elm-live AccountContacts.elm --pushstate --output=elm.js --open

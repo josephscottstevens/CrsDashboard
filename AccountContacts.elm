@@ -39,13 +39,33 @@ type alias Model =
     }
 
 
+inactiveHelper : Model -> Row -> Bool
+inactiveHelper model row =
+    if model.showInactive then
+        row.activeStatus
+    else
+        True
+
+
+searchHelper : Model -> Row -> Bool
+searchHelper model row =
+    let
+        searchText =
+            String.toLower model.filterStr
+
+        rowText =
+            String.toLower (toString row)
+    in
+    String.contains searchText rowText
+
+
 view : Model -> Html Msg
 view model =
     let
         filteredRows =
-            List.filter
-                (\t -> model.showInactive)
-                model.rows
+            model.rows
+                |> List.filter (inactiveHelper model)
+                |> List.filter (searchHelper model)
     in
     div []
         [ Table.view model.tableState filteredRows (gridConfig model)
@@ -129,7 +149,7 @@ columns model =
     , Table.stringColumn "Contact" .contact NoStyle
     , Table.stringColumn "Account" .account NoStyle
     , Table.stringColumn "Active Status" statusHelper NoStyle
-    , Table.stringColumn "ContactStatus" .contactStatus NoStyle
+    , Table.stringColumn "Contact Status" .contactStatus NoStyle
     ]
 
 
@@ -137,11 +157,11 @@ gridConfig : Model -> Table.Config Row Msg
 gridConfig model =
     { domTableId = "AccountEntitlementsTable"
     , toolbar =
-        [ --div [ class "detailsEntitlementToolbarElementLeft" ]
-          --  [ input [ type_ "checkbox", onClick ToggleShowInactive ] []
-          --  , label [] [ text "Show Inactive Content" ]
-          --  ]
-          div [ class "detailsEntitlementToolbarElementLeft" ]
+        [ div [ class "detailsEntitlementToolbarElementLeft" ]
+            [ input [ type_ "checkbox", onClick ToggleShowInactive ] []
+            , label [] [ text "Show Inactive Contacts" ]
+            ]
+        , div [ class "detailsEntitlementToolbarElementLeft" ]
             [ label [] [ text "Contact Search " ]
             , input [ type_ "text", onInput UpdateFilter ] []
             ]
@@ -154,7 +174,7 @@ gridConfig model =
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
-    ( { rows = dummyData
+    ( { rows = []
       , tableState = Table.init "Year" flags.displayLength
       , filterStr = ""
       , showInactive = True
@@ -171,48 +191,3 @@ main =
         , view = view
         , subscriptions = subscriptions
         }
-
-
-dummyData : List Row
-dummyData =
-    [ { contentId = 0
-      , contentKey = Just "ABJ002"
-      , contact = Just "Nick Lee"
-      , account = Just "Ashburton Jersey, LTD."
-      , activeStatus = True
-      , contactStatus = Just "Client"
-      , contentTypeId = 10
-      }
-    , { contentId = 6
-      , contentKey = Just "ABJ006"
-      , contact = Just "Richard Robinson"
-      , account = Just "Ashburton Jersey, LTD."
-      , activeStatus = True
-      , contactStatus = Just "Client"
-      , contentTypeId = 10
-      }
-    , { contentId = 10
-      , contentKey = Just "ABJ010"
-      , contact = Just "Luke Gale"
-      , account = Just "Ashburton Jersey, LTD."
-      , activeStatus = True
-      , contactStatus = Just "Client"
-      , contentTypeId = 10
-      }
-    , { contentId = 3
-      , contentKey = Just "DJA414"
-      , contact = Just "Shane de la Haye"
-      , account = Just "Ashburton Jersey, LTD."
-      , activeStatus = True
-      , contactStatus = Just "Client"
-      , contentTypeId = 10
-      }
-    , { contentId = 4
-      , contentKey = Just "GXD831"
-      , contact = Just "Craig Farley"
-      , account = Just "Ashburton Jersey, LTD."
-      , activeStatus = True
-      , contactStatus = Just "Client"
-      , contentTypeId = 10
-      }
-    ]
