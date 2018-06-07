@@ -5,8 +5,8 @@ import AccountContents exposing (Model, emptyModel, init, subscriptions, update,
 import AccountEntitlements exposing (Model, emptyModel, init, subscriptions, update, view)
 import Common.Html exposing (role)
 import Common.Types exposing (Flags)
-import Html exposing (Html, a, br, button, div, h1, input, label, li, span, text, ul)
-import Html.Attributes exposing (class, href, id, tabindex)
+import Html exposing (Html, a, br, button, div, h1, input, label, li, span, table, tbody, td, text, tr, ul)
+import Html.Attributes exposing (class, href, id, style, tabindex)
 import Html.Events exposing (onClick)
 
 
@@ -84,11 +84,18 @@ getPage flags pageStr =
 
 view : Model -> Html Msg
 view model =
-    div [ id "account-tabs" ]
-        [ ul [ id "detailsTabList", role "tablist", class "ui-tabs-nav ui-corner-all ui-helper-reset ui-helper-clearfix ui-widget-header" ]
-            [ li [ id "accountDetailsTab", role "tab", tabindex -1, class "ui-tabs-tab ui-corner-top ui-state-default ui-tab" ]
-                [ a [ href "#accountDetails-fragment", tabindex -1, role "ui-tabs-anchor", id "ui-id-6", onClick (OpenPage "AccountContacts") ]
-                    [ span [] [ text "Account Details" ]
+    div [ class "showAccountDetails" ]
+        [ table [ id "account-tabs", style [ ( "width", "100%" ) ], class "ui-tabs ui-corner-all ui-widget ui-widget-content" ]
+            [ tbody []
+                [ div [ id "account-tabs" ]
+                    [ ul [ id "detailsTabList", role "tablist", class "ui-tabs-nav ui-corner-all ui-helper-reset ui-helper-clearfix ui-widget-header" ]
+                        (List.indexedMap (\idx t -> viewTab (getCurrentTab model.page) idx t) tabs)
+                    , div
+                        [ id ("#" ++ getTabContentId (getCurrentTab model.page) ++ "-fragment")
+                        , style [ ( "font-family", "Arial" ), ( "font-size", "12pt" ), ( "height", "100%" ), ( "overflow", "auto" ) ]
+                        , class "ui-tabs-panel ui-corner-bottom ui-widget-content"
+                        ]
+                        [ viewPage model.page ]
                     ]
                 ]
             ]
@@ -99,18 +106,7 @@ viewPage : Page -> Html Msg
 viewPage page =
     case page of
         NotLoaded ->
-            div []
-                [ label [] [ text "No Page Loaded yet" ]
-                , div []
-                    [ button [ onClick (OpenPage "AccountContacts") ] [ text "Open AccountContacts" ]
-                    ]
-                , div []
-                    [ button [ onClick (OpenPage "AccountEntitlements") ] [ text "Open AccountEntitlements" ]
-                    ]
-                , div []
-                    [ button [ onClick (OpenPage "AccountContents") ] [ text "Open AccountContents" ]
-                    ]
-                ]
+            text ""
 
         AccountContacts subModel ->
             Html.map AccountContactsMsg (AccountContacts.view subModel)
@@ -174,3 +170,123 @@ main =
         , view = view
         , subscriptions = subscriptions
         }
+
+
+
+-- Tab Stuff
+
+
+getCurrentTab : Page -> Maybe Tab
+getCurrentTab page =
+    case page of
+        NotLoaded ->
+            Nothing
+
+        AccountContacts _ ->
+            Just accountContactsTab
+
+        AccountEntitlements _ ->
+            Just accountEntitlementsTab
+
+        AccountContents _ ->
+            Just accountContentsTab
+
+        Error _ ->
+            Nothing
+
+
+getTabContentId : Maybe Tab -> String
+getTabContentId maybeTab =
+    case maybeTab of
+        Just t ->
+            t.name
+
+        Nothing ->
+            ""
+
+
+type alias Tab =
+    { name : String, displayText : String }
+
+
+accountDetailsTab : Tab
+accountDetailsTab =
+    Tab "accountDetails" "Account Details"
+
+
+accountContactsTab : Tab
+accountContactsTab =
+    Tab "accountContacts" "Account Contacts"
+
+
+accountContentsTab : Tab
+accountContentsTab =
+    Tab "accountContents" "Account Contents"
+
+
+accountEntitlementsTab : Tab
+accountEntitlementsTab =
+    Tab "accountEntitlements" "Account Entitlement Matrix"
+
+
+accountProjectsTab : Tab
+accountProjectsTab =
+    Tab "accountProjects" "Account Projects"
+
+
+closeDetailsTab : Tab
+closeDetailsTab =
+    Tab "closeDetails" "Close Details"
+
+
+tabs : List Tab
+tabs =
+    [ accountDetailsTab
+    , accountContactsTab
+    , accountContentsTab
+    , accountEntitlementsTab
+    , accountProjectsTab
+    , closeDetailsTab
+    ]
+
+
+viewTab : Maybe Tab -> Int -> Tab -> Html Msg
+viewTab activeTab idx tab =
+    let
+        hrefText =
+            "#" ++ tab.name ++ "-fragment"
+
+        hrefId =
+            "ui-id-" ++ toString (idx + 6)
+
+        isActive =
+            ""
+
+        closeDetailsStyle =
+            if tab.name == "accountDetails" then
+                [ ( "float", "right" ) ]
+            else
+                []
+
+        idStr =
+            if tab.name == "accountDetails" then
+                "accountDetailsTab"
+            else
+                ""
+
+        activeStr =
+            if activeTab == Just tab then
+                "ui-tabs-active ui-state-active"
+            else
+                ""
+    in
+    li [ id idStr, role "tab", tabindex 0, class ("ui-tabs-tab ui-corner-top ui-state-default ui-tab " ++ activeStr), style closeDetailsStyle ]
+        [ a [ href hrefText, tabindex -1, role "presentation", class "ui-tabs-anchor", id hrefId, onClick (OpenPage tab.name) ]
+            [ span [] [ text tab.displayText ]
+            ]
+        ]
+
+
+
+-- todo
+-- onclick="closeDetails()"
