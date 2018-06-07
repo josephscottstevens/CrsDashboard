@@ -1,7 +1,8 @@
-port module AccountContents exposing (main)
+port module AccountContents exposing (Model, Msg, emptyModel, init, subscriptions, update, view)
 
 import Common.Functions as Functions
 import Common.Table as Table exposing (ColumnStyle(..))
+import Common.Types exposing (Flags)
 import Html exposing (Html, a, br, button, div, h1, input, label, text)
 import Html.Attributes exposing (class, href, type_)
 import Html.Events exposing (onClick, onInput)
@@ -13,11 +14,6 @@ port loadAccountContentsData : (List Row -> msg) -> Sub msg
 subscriptions : Model -> Sub Msg
 subscriptions model =
     loadAccountContentsData LoadAccountContentsData
-
-
-type alias Flags =
-    { displayLength : String
-    }
 
 
 type alias Row =
@@ -56,7 +52,7 @@ searchHelper model row =
         rowText =
             String.toLower (toString row)
     in
-        String.contains searchText rowText
+    String.contains searchText rowText
 
 
 view : Model -> Html Msg
@@ -67,9 +63,9 @@ view model =
                 |> List.filter (inactiveHelper model)
                 |> List.filter (searchHelper model)
     in
-        div []
-            [ Table.view model.tableState filteredRows (gridConfig model)
-            ]
+    div []
+        [ Table.view model.tableState filteredRows (gridConfig model)
+        ]
 
 
 type Msg
@@ -115,14 +111,14 @@ codeHelper row =
         contentKey =
             Maybe.withDefault "" row.contentKey
     in
-        if row.contentTypeId /= 11 then
-            a
-                [ href "javascript:void(0)"
-                , onClick (OpenItem contentKey)
-                ]
-                [ text contentKey ]
-        else
-            text contentKey
+    if row.contentTypeId /= 11 then
+        a
+            [ href "javascript:void(0)"
+            , onClick (OpenItem contentKey)
+            ]
+            [ text contentKey ]
+    else
+        text contentKey
 
 
 codeColumn : Table.Column Row Msg
@@ -175,13 +171,18 @@ gridConfig model =
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
-    ( { rows = []
-      , tableState = Table.init "Year" flags.displayLength
-      , filterStr = ""
-      , showInactive = True
-      }
+    ( emptyModel flags
     , Cmd.none
     )
+
+
+emptyModel : Flags -> Model
+emptyModel flags =
+    { rows = []
+    , tableState = Table.init "Year" flags.displayLength
+    , filterStr = ""
+    , showInactive = True
+    }
 
 
 main : Program Flags Model Msg
