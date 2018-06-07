@@ -56,7 +56,8 @@
 
 		var dummyAccountContentsData =
 			[{
-				contentKey: "ASH02.RPT"
+				contentId: 1
+				, contentKey: "ASH02.RPT"
 				, title: "Nick Lee"
 				, format: "Ashburton Jersey, LTD."
 				, schedule: "Client"
@@ -64,7 +65,8 @@
 				, contentTypeId: 10
 			}
 				, {
-				contentKey: "ASH02.RPT"
+				contentId: 1
+				, contentKey: "ASH02.RPT"
 				, title: "Nick Lee"
 				, format: "Ashburton Jersey, LTD."
 				, schedule: "Client"
@@ -72,7 +74,8 @@
 				, contentTypeId: 10
 			}
 				, {
-				contentKey: "ASH02.RPT"
+				contentId: 1
+				, contentKey: "ASH02.RPT"
 				, title: "Nick Lee"
 				, format: "Ashburton Jersey, LTD."
 				, schedule: "Client"
@@ -80,7 +83,8 @@
 				, contentTypeId: 10
 			}
 				, {
-				contentKey: "ASH02.RPT"
+				contentId: 1
+				, contentKey: "ASH02.RPT"
 				, title: "Nick Lee"
 				, format: "Ashburton Jersey, LTD."
 				, schedule: "Client"
@@ -88,7 +92,8 @@
 				, contentTypeId: 11
 			}
 				, {
-				contentKey: "ASH02.RPT"
+				contentId: 1
+				, contentKey: "ASH02.RPT"
 				, title: "Nick Lee"
 				, format: "Ashburton Jersey, LTD."
 				, schedule: "Client"
@@ -105,9 +110,9 @@
 						app.ports.loadAccountContactsData.send(dummyAccountContactsData);
 					}, 100);
 					break;
-				case "AccountContent":
+				case "AccountContents":
 					setTimeout(function () {
-						app.ports.loadAccountContentData.send(dummyAccountContentData);
+						app.ports.loadAccountContentsData.send(dummyAccountContentsData);
 					}, 100);
 					break;
 			}
