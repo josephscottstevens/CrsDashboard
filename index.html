@@ -6,7 +6,7 @@
 	<script src="elm.js"></script>
 	<script>
 		var element = document.getElementById("elm-code-is-loaded-here");
-		var dummyData =
+		var dummyAccountContactsData =
 			[{
 				contentId: 0
 				, contentKey: "ABJ002"
@@ -98,7 +98,20 @@
 			];
 
 		var app = Elm.Main.embed(element, { showExportBtnToggle: true, displayLength: "50" });
-		app.ports.loadAccountContactsData.send(dummyData);
+		app.ports.loadDummyData.subscribe(function (pageStr) {
+			switch (pageStr) {
+				case "AccountContacts":
+					setTimeout(function () {
+						app.ports.loadAccountContactsData.send(dummyAccountContactsData);
+					}, 100);
+					break;
+				case "AccountContent":
+					setTimeout(function () {
+						app.ports.loadAccountContentData.send(dummyAccountContentData);
+					}, 100);
+					break;
+			}
+		});
 	</script>
 </body>
 
