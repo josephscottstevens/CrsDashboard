@@ -103,10 +103,12 @@
 				case "AccountContacts":
 					setTimeout(function () {
 						app.ports.loadAccountContactsData.send(dummyAccountContactsData);
-					}, 1000);
+					}, 100);
 					break;
-				case "":
-					//app.ports.aaaaaa.send(bbbbbbb);
+				case "AccountContent":
+					setTimeout(function () {
+						app.ports.loadAccountContentData.send(dummyAccountContentData);
+					}, 100);
 					break;
 			}
 		});
