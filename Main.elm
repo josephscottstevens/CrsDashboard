@@ -10,6 +10,9 @@ import Html.Events exposing (onClick)
 port openPage : (String -> msg) -> Sub msg
 
 
+port loadDummyData : String -> Cmd msg
+
+
 type alias Model =
     { page : Page
     , flags : Flags
@@ -27,7 +30,26 @@ init flags =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    openPage OpenPage
+    Sub.batch
+        [ openPage OpenPage
+        , pageSubscriptions model.page
+        ]
+
+
+pageSubscriptions : Page -> Sub Msg
+pageSubscriptions page =
+    case page of
+        NotLoaded ->
+            Sub.none
+
+        AccountContacts subModel ->
+            Sub.map AccountContactsMsg (AccountContacts.subscriptions subModel)
+
+        AccountEntitlements subModel ->
+            Sub.map AccountEntitlementsMsg (AccountEntitlements.subscriptions subModel)
+
+        Error _ ->
+            Sub.none
 
 
 type Page
@@ -98,7 +120,7 @@ updatePage page msg model =
     case ( msg, page ) of
         ( OpenPage pageStr, _ ) ->
             ( { model | page = getPage model.flags pageStr }
-            , Cmd.none
+            , loadDummyData pageStr
             )
 
         ( AccountContactsMsg subMsg, AccountContacts subModel ) ->
