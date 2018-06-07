@@ -3,8 +3,10 @@ port module Main exposing (..)
 import AccountContacts exposing (Model, emptyModel, init, subscriptions, update, view)
 import AccountContents exposing (Model, emptyModel, init, subscriptions, update, view)
 import AccountEntitlements exposing (Model, emptyModel, init, subscriptions, update, view)
+import Common.Html exposing (role)
 import Common.Types exposing (Flags)
-import Html exposing (Html, a, br, button, div, h1, input, label, text)
+import Html exposing (Html, a, br, button, div, h1, input, label, li, span, text, ul)
+import Html.Attributes exposing (class, href, id, tabindex)
 import Html.Events exposing (onClick)
 
 
@@ -82,7 +84,20 @@ getPage flags pageStr =
 
 view : Model -> Html Msg
 view model =
-    case model.page of
+    div [ id "account-tabs" ]
+        [ ul [ id "detailsTabList", role "tablist", class "ui-tabs-nav ui-corner-all ui-helper-reset ui-helper-clearfix ui-widget-header" ]
+            [ li [ id "accountDetailsTab", role "tab", tabindex -1, class "ui-tabs-tab ui-corner-top ui-state-default ui-tab" ]
+                [ a [ href "#accountDetails-fragment", tabindex -1, role "ui-tabs-anchor", id "ui-id-6", onClick (OpenPage "AccountContacts") ]
+                    [ span [] [ text "Account Details" ]
+                    ]
+                ]
+            ]
+        ]
+
+
+viewPage : Page -> Html Msg
+viewPage page =
+    case page of
         NotLoaded ->
             div []
                 [ label [] [ text "No Page Loaded yet" ]
