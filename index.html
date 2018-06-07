@@ -1,55 +1,62 @@
 <!DOCTYPE html>
 <html>
-<body>
-    <div id="elm-code-is-loaded-here"></div>
-    <script src="elm.js"></script>
-    <script>
-				var element = document.getElementById("elm-code-is-loaded-here");
-				var dummyData = 
-				[ { contentId : 0
-					, contentKey : "ABJ002"
-					, contact : "Nick Lee"
-					, account : "Ashburton Jersey, LTD."
-					, activeStatus : true
-					, contactStatus : "Client"
-					, contentTypeId : 10
-					}
-				, { contentId : 6
-					, contentKey : "ABJ006"
-					, contact : "Richard Robinson"
-					, account : "Ashburton Jersey, LTD."
-					, activeStatus : true
-					, contactStatus : "Client"
-					, contentTypeId : 10
-					}
-				, { contentId : 10
-					, contentKey : "ABJ010"
-					, contact : "Luke Gale"
-					, account : "Ashburton Jersey, LTD."
-					, activeStatus : true
-					, contactStatus : "Client"
-					, contentTypeId : 10
-					}
-				, { contentId : 3
-					, contentKey : "DJA414"
-					, contact : "Shane de la Haye"
-					, account : "Ashburton Jersey, LTD."
-					, activeStatus : true
-					, contactStatus : "Client"
-					, contentTypeId : 11
-					}
-				, { contentId : 4
-					, contentKey : "GXD831"
-					, contact : "Craig Farley"
-					, account : "Ashburton Jersey, LTD."
-					, activeStatus : false
-					, contactStatus : "Client"
-					, contentTypeId : 10
-					}
-				];
 
-				var app = Elm.AccountContacts.embed(element, {displayLength: "50"});
-				app.ports.loadAccountContactsData.send(dummyData);
-    </script>
+<body>
+	<div id="elm-code-is-loaded-here"></div>
+	<script src="elm.js"></script>
+	<script>
+		var element = document.getElementById("elm-code-is-loaded-here");
+		var dummyData =
+			[{
+				contentId: 0
+				, contentKey: "ABJ002"
+				, contact: "Nick Lee"
+				, account: "Ashburton Jersey, LTD."
+				, activeStatus: true
+				, contactStatus: "Client"
+				, contentTypeId: 10
+			}
+				, {
+				contentId: 6
+				, contentKey: "ABJ006"
+				, contact: "Richard Robinson"
+				, account: "Ashburton Jersey, LTD."
+				, activeStatus: true
+				, contactStatus: "Client"
+				, contentTypeId: 10
+			}
+				, {
+				contentId: 10
+				, contentKey: "ABJ010"
+				, contact: "Luke Gale"
+				, account: "Ashburton Jersey, LTD."
+				, activeStatus: true
+				, contactStatus: "Client"
+				, contentTypeId: 10
+			}
+				, {
+				contentId: 3
+				, contentKey: "DJA414"
+				, contact: "Shane de la Haye"
+				, account: "Ashburton Jersey, LTD."
+				, activeStatus: true
+				, contactStatus: "Client"
+				, contentTypeId: 11
+			}
+				, {
+				contentId: 4
+				, contentKey: "GXD831"
+				, contact: "Craig Farley"
+				, account: "Ashburton Jersey, LTD."
+				, activeStatus: false
+				, contactStatus: "Client"
+				, contentTypeId: 10
+			}
+			];
+
+		var app = Elm.Main.embed(element, { showExportBtnToggle: true, displayLength: "50" });
+		app.ports.loadAccountContactsData.send(dummyData);
+	</script>
 </body>
+
 </html>

@@ -1,7 +1,8 @@
-port module AccountContacts exposing (main)
+port module AccountContacts exposing (Model, Msg, emptyModel, init, subscriptions, update, view)
 
 import Common.Functions as Functions
 import Common.Table as Table exposing (ColumnStyle(..))
+import Common.Types exposing (Flags)
 import Html exposing (Html, a, br, button, div, h1, input, label, text)
 import Html.Attributes exposing (class, href, type_)
 import Html.Events exposing (onClick, onInput)
@@ -13,11 +14,6 @@ port loadAccountContactsData : (List Row -> msg) -> Sub msg
 subscriptions : Model -> Sub Msg
 subscriptions model =
     loadAccountContactsData LoadAccountContactsData
-
-
-type alias Flags =
-    { displayLength : String
-    }
 
 
 type alias Row =
@@ -174,20 +170,15 @@ gridConfig model =
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
-    ( { rows = []
-      , tableState = Table.init "Year" flags.displayLength
-      , filterStr = ""
-      , showInactive = True
-      }
+    ( emptyModel flags
     , Cmd.none
     )
 
 
-main : Program Flags Model Msg
-main =
-    Html.programWithFlags
-        { init = init
-        , update = update
-        , view = view
-        , subscriptions = subscriptions
-        }
+emptyModel : Flags -> Model
+emptyModel flags =
+    { rows = []
+    , tableState = Table.init "Year" flags.displayLength
+    , filterStr = ""
+    , showInactive = True
+    }
