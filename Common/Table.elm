@@ -33,7 +33,6 @@ blockSize =
 
 init : String -> String -> State
 init sortedColumnheader displayLength =
-    Debug.log "" <|
         { selectedId = Nothing
         , openDropdownId = Nothing
         , pageIndex = 0

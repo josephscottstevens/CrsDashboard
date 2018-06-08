@@ -2,32 +2,20 @@ port module AccountProjects exposing (Model, Msg, emptyModel, init, subscription
 
 import Common.Functions as Functions
 import Common.Table as Table exposing (ColumnStyle(..))
-import Common.Types exposing (Flags)
+import Common.Types exposing (AccountProjectsRow, Flags)
+import Date exposing (..)
 import Html exposing (Html, a, br, button, div, h1, input, label, text)
 import Html.Attributes exposing (class, href, type_)
 import Html.Events exposing (onClick, onInput)
-import Date exposing (..)
-
-
-port loadAccountProjectsData : (List Row -> msg) -> Sub msg
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    loadAccountProjectsData LoadAccountProjectsData
-
-
-type alias Row =
-    { projectId : Int
-    , startDate : Maybe String
-    , completionDate : Maybe String
-    , contactName : Maybe String
-    , projectDescription : Maybe String
-    }
+    Sub.none
 
 
 type alias Model =
-    { rows : List Row
+    { rows : List AccountProjectsRow
     , tableState : Table.State
     , filterStr : String
     , showInactive : Bool
@@ -43,7 +31,7 @@ type alias Model =
 --         True
 
 
-searchHelper : Model -> Row -> Bool
+searchHelper : Model -> AccountProjectsRow -> Bool
 searchHelper model row =
     let
         searchText =
@@ -52,7 +40,7 @@ searchHelper model row =
         rowText =
             String.toLower (toString row)
     in
-        String.contains searchText rowText
+    String.contains searchText rowText
 
 
 view : Model -> Html Msg
@@ -63,9 +51,9 @@ view model =
                 --|> List.filter (inactiveHelper model)
                 |> List.filter (searchHelper model)
     in
-        div []
-            [ Table.view model.tableState filteredRows (gridConfig model)
-            ]
+    div []
+        [ Table.view model.tableState filteredRows (gridConfig model)
+        ]
 
 
 type Msg
@@ -73,7 +61,6 @@ type Msg
     | UpdateFilter String
     | ToggleShowInactive
     | OpenItem String
-    | LoadAccountProjectsData (List Row)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -99,44 +86,8 @@ update msg model =
             , Functions.openItem str
             )
 
-        LoadAccountProjectsData rows ->
-            ( { model | rows = rows }
-            , Cmd.none
-            )
 
-
-
--- codeHelper : Row -> Html Msg
--- codeHelper row =
---     let
---         contentKey =
---             Maybe.withDefault "" row.contentKey
---     in
---         if row.contentTypeId /= 11 then
---             a
---                 [ href "javascript:void(0)"
---                 , onClick (OpenItem contentKey)
---                 ]
---                 [ text contentKey ]
---         else
---             text contentKey
--- codeColumn : Table.Column Row Msg
--- codeColumn =
---     { header = text "Code"
---     , viewData = codeHelper
---     , columnStyle = CustomStyle [ ( "width", "1%" ), ( "border-right", "1px solid black" ) ]
---     , sorter = Table.IncOrDec (List.sortBy (\t -> Functions.defaultString t.contentKey))
---     , columnId = "code"
---     }
--- statusHelper : Row -> Maybe String
--- statusHelper row =
---     if row.activeStatus then
---         Just "Active"
---     else
---         Just "Inactive"
-
-
-columns : Model -> List (Table.Column Row Msg)
+columns : Model -> List (Table.Column AccountProjectsRow Msg)
 columns model =
     [ --codeColumn,
       Table.intColumn "#" .projectId NoStyle
@@ -147,7 +98,7 @@ columns model =
     ]
 
 
-gridConfig : Model -> Table.Config Row Msg
+gridConfig : Model -> Table.Config AccountProjectsRow Msg
 gridConfig model =
     { domTableId = "AccountProjectsTable"
     , toolbar =
@@ -168,14 +119,14 @@ gridConfig model =
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
-    ( emptyModel flags
+    ( emptyModel flags []
     , Cmd.none
     )
 
 
-emptyModel : Flags -> Model
-emptyModel flags =
-    { rows = []
+emptyModel : Flags -> List AccountProjectsRow -> Model
+emptyModel flags rows =
+    { rows = rows
     , tableState = Table.init "Year" flags.displayLength
     , filterStr = ""
     , showInactive = True

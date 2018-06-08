@@ -13,9 +13,6 @@ import Html.Events exposing (onClick)
 port openPage : (String -> msg) -> Sub msg
 
 
-port loadDummyData : String -> Cmd msg
-
-
 type alias Model =
     { page : Page
     , flags : Flags
@@ -146,7 +143,7 @@ updatePage page msg model =
     case ( msg, page ) of
         ( OpenPage pageStr, _ ) ->
             ( { model | page = getPage model.flags pageStr }
-            , loadDummyData pageStr
+            , Cmd.none
             )
 
         ( AccountContactsMsg subMsg, AccountContacts subModel ) ->

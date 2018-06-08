@@ -2,40 +2,26 @@ port module AccountContents exposing (Model, Msg, emptyModel, init, subscription
 
 import Common.Functions as Functions
 import Common.Table as Table exposing (ColumnStyle(..))
-import Common.Types exposing (Flags)
+import Common.Types exposing (AccountContentsRow, Flags)
 import Html exposing (Html, a, br, button, div, h1, input, label, text)
 import Html.Attributes exposing (class, href, type_)
 import Html.Events exposing (onClick, onInput)
 
 
-port loadAccountContentsData : (List Row -> msg) -> Sub msg
-
-
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    loadAccountContentsData LoadAccountContentsData
-
-
-type alias Row =
-    { contentId : Int
-    , contentKey : Maybe String
-    , title : Maybe String
-    , format : Maybe String
-    , schedule : Maybe String
-    , activeStatus : Bool
-    , contentTypeId : Int
-    }
+    Sub.none
 
 
 type alias Model =
-    { rows : List Row
+    { rows : List AccountContentsRow
     , tableState : Table.State
     , filterStr : String
     , showInactive : Bool
     }
 
 
-inactiveHelper : Model -> Row -> Bool
+inactiveHelper : Model -> AccountContentsRow -> Bool
 inactiveHelper model row =
     if model.showInactive then
         row.activeStatus
@@ -43,7 +29,7 @@ inactiveHelper model row =
         True
 
 
-searchHelper : Model -> Row -> Bool
+searchHelper : Model -> AccountContentsRow -> Bool
 searchHelper model row =
     let
         searchText =
@@ -73,7 +59,6 @@ type Msg
     | UpdateFilter String
     | ToggleShowInactive
     | OpenItem String
-    | LoadAccountContentsData (List Row)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -99,13 +84,8 @@ update msg model =
             , Functions.openItem str
             )
 
-        LoadAccountContentsData rows ->
-            ( { model | rows = rows }
-            , Cmd.none
-            )
 
-
-codeHelper : Row -> Html Msg
+codeHelper : AccountContentsRow -> Html Msg
 codeHelper row =
     let
         contentKey =
@@ -121,7 +101,7 @@ codeHelper row =
         text contentKey
 
 
-codeColumn : Table.Column Row Msg
+codeColumn : Table.Column AccountContentsRow Msg
 codeColumn =
     { header = text "Code"
     , viewData = codeHelper
@@ -131,7 +111,7 @@ codeColumn =
     }
 
 
-statusHelper : Row -> Maybe String
+statusHelper : AccountContentsRow -> Maybe String
 statusHelper row =
     if row.activeStatus then
         Just "Active"
@@ -139,7 +119,7 @@ statusHelper row =
         Just "Inactive"
 
 
-columns : Model -> List (Table.Column Row Msg)
+columns : Model -> List (Table.Column AccountContentsRow Msg)
 columns model =
     [ codeColumn
     , Table.stringColumn "Content Key" .contentKey NoStyle
@@ -150,7 +130,7 @@ columns model =
     ]
 
 
-gridConfig : Model -> Table.Config Row Msg
+gridConfig : Model -> Table.Config AccountContentsRow Msg
 gridConfig model =
     { domTableId = "AccountContentsTable"
     , toolbar =
@@ -171,25 +151,15 @@ gridConfig model =
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
-    ( emptyModel flags
+    ( emptyModel flags []
     , Cmd.none
     )
 
 
-emptyModel : Flags -> Model
-emptyModel flags =
-    { rows = []
+emptyModel : Flags -> List AccountContentsRow -> Model
+emptyModel flags rows =
+    { rows = rows
     , tableState = Table.init "Year" flags.displayLength
     , filterStr = ""
     , showInactive = True
     }
-
-
-main : Program Flags Model Msg
-main =
-    Html.programWithFlags
-        { init = init
-        , update = update
-        , view = view
-        , subscriptions = subscriptions
-        }

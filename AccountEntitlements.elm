@@ -2,13 +2,10 @@ port module AccountEntitlements exposing (Model, Msg, emptyModel, init, subscrip
 
 import Common.Functions as Functions
 import Common.Table as Table exposing (ColumnStyle(CustomStyle, Width))
-import Common.Types exposing (Flags)
+import Common.Types exposing (AccountEntitlementsRow, CustomerData, Flags)
 import Html exposing (Html, a, br, button, div, h1, input, label, text)
 import Html.Attributes exposing (class, href, type_)
 import Html.Events exposing (onClick, onInput)
-
-
-port loadData : (( List Row, List CustomerData ) -> msg) -> Sub msg
 
 
 port openContactItem : String -> Cmd msg
@@ -19,30 +16,11 @@ port excelExport : List (List String) -> Cmd msg
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    loadData LoadData
-
-
-type alias CustomerData =
-    { code : String
-    , first_name : String
-    , last_name : String
-    , client_active : Bool
-    }
-
-
-type alias Row =
-    { contentId : Int
-    , contentKey : Maybe String
-    , customerCode : List String
-    , contentActive : String
-    , relationshipType : List String
-    , methodDesc : List String
-    , contentTypeId : Int
-    }
+    Sub.none
 
 
 type alias Model =
-    { rows : List Row
+    { rows : List AccountEntitlementsRow
     , clients : List CustomerData
     , tableState : Table.State
     , filterStr : String
@@ -71,7 +49,6 @@ view model =
 
 type Msg
     = SetTableState Table.State
-    | LoadData ( List Row, List CustomerData )
     | UpdateFilter String
     | ToggleShowInactive
     | OpenItem String
@@ -84,11 +61,6 @@ update msg model =
     case msg of
         SetTableState newState ->
             ( { model | tableState = newState }
-            , Cmd.none
-            )
-
-        LoadData ( rows, clients ) ->
-            ( { model | rows = rows, clients = clients }
             , Cmd.none
             )
 
@@ -163,7 +135,7 @@ customerDataToHtml customer =
         ]
 
 
-rowHelper : String -> Row -> String
+rowHelper : String -> AccountEntitlementsRow -> String
 rowHelper custCode row =
     if List.member custCode row.customerCode then
         if List.member "crsEntitlementContent" row.relationshipType && List.member "pushPreferenceContent" row.relationshipType then
@@ -182,7 +154,7 @@ rowHelper custCode row =
         ""
 
 
-contentHelper : Row -> Html Msg
+contentHelper : AccountEntitlementsRow -> Html Msg
 contentHelper row =
     let
         contentKey =
@@ -209,7 +181,7 @@ modelToHeader model =
     [ "" ] ++ List.map (\client -> customerDataToString client) (List.filter (\t -> t.client_active) model.clients)
 
 
-rowToList : Model -> Row -> List String
+rowToList : Model -> AccountEntitlementsRow -> List String
 rowToList model row =
     [ Maybe.withDefault "" row.contentKey
     ]
@@ -218,7 +190,7 @@ rowToList model row =
             (filterColumns model model.clients)
 
 
-columns : Model -> List (Table.Column Row Msg)
+columns : Model -> List (Table.Column AccountEntitlementsRow Msg)
 columns model =
     [ { header = text ""
       , viewData = contentHelper
@@ -247,7 +219,7 @@ sortMaybeString t =
         t
 
 
-gridConfig : Model -> Table.Config Row Msg
+gridConfig : Model -> Table.Config AccountEntitlementsRow Msg
 gridConfig model =
     { domTableId = "AccountEntitlementsTable"
     , toolbar =
@@ -275,15 +247,15 @@ gridConfig model =
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
-    ( emptyModel flags
+    ( emptyModel flags ( [], [] )
     , Cmd.none
     )
 
 
-emptyModel : Flags -> Model
-emptyModel flags =
-    { rows = []
-    , clients = []
+emptyModel : Flags -> ( List AccountEntitlementsRow, List CustomerData ) -> Model
+emptyModel flags ( rows, clients ) =
+    { rows = rows
+    , clients = clients
     , tableState = Table.init "Year" flags.displayLength
     , filterStr = ""
     , showInactive = False
