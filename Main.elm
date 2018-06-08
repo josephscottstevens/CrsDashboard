@@ -2,9 +2,11 @@ port module Main exposing (..)
 
 import AccountContacts exposing (Model, emptyModel, init, subscriptions, update, view)
 import AccountContents exposing (Model, emptyModel, init, subscriptions, update, view)
+import AccountDetails exposing (Model, emptyModel, init, subscriptions, update, view)
 import AccountEntitlements exposing (Model, emptyModel, init, subscriptions, update, view)
-import Common.Html exposing (role)
-import Common.Types exposing (Flags)
+import AccountProjects exposing (Model, emptyModel, init, subscriptions, update, view)
+import Common.Html exposing (ariaControls, ariaExpanded, ariaHidden, ariaLabelledby, ariaSelected, role)
+import Common.Types exposing (AllTheData, Flags)
 import Html exposing (Html, a, br, button, div, h1, input, label, li, span, table, tbody, td, text, tr, ul)
 import Html.Attributes exposing (class, href, id, style, tabindex)
 import Html.Events exposing (onClick)
@@ -42,14 +44,20 @@ pageSubscriptions page =
         NotLoaded ->
             Sub.none
 
+        AccountDetails subModel ->
+            Sub.map AccountDetailsMsg (AccountDetails.subscriptions subModel)
+
         AccountContacts subModel ->
             Sub.map AccountContactsMsg (AccountContacts.subscriptions subModel)
+
+        AccountContents subModel ->
+            Sub.map AccountContentsMsg (AccountContents.subscriptions subModel)
 
         AccountEntitlements subModel ->
             Sub.map AccountEntitlementsMsg (AccountEntitlements.subscriptions subModel)
 
-        AccountContents subModel ->
-            Sub.map AccountContentsMsg (AccountContents.subscriptions subModel)
+        AccountProjects subModel ->
+            Sub.map AccountProjectsMsg (AccountProjects.subscriptions subModel)
 
         Error _ ->
             Sub.none
@@ -57,23 +65,31 @@ pageSubscriptions page =
 
 type Page
     = NotLoaded
+    | AccountDetails AccountDetails.Model
     | AccountContacts AccountContacts.Model
-    | AccountEntitlements AccountEntitlements.Model
     | AccountContents AccountContents.Model
+    | AccountEntitlements AccountEntitlements.Model
+    | AccountProjects AccountProjects.Model
     | Error String
 
 
 getPage : Flags -> String -> Page
 getPage flags pageStr =
     case pageStr of
-        "AccountContacts" ->
-            AccountContacts (AccountContacts.emptyModel flags)
+        "accountDetails" ->
+            AccountDetails (AccountDetails.emptyModel flags.allTheData.accountDetails)
 
-        "AccountEntitlements" ->
-            AccountEntitlements (AccountEntitlements.emptyModel flags)
+        "accountContacts" ->
+            AccountContacts (AccountContacts.emptyModel flags flags.allTheData.accountContactsRows)
 
-        "AccountContents" ->
-            AccountContents (AccountContents.emptyModel flags)
+        "accountContents" ->
+            AccountContents (AccountContents.emptyModel flags flags.allTheData.accountContentsRows)
+
+        "accountEntitlements" ->
+            AccountEntitlements (AccountEntitlements.emptyModel flags ( flags.allTheData.accountEntitlementsRows, flags.allTheData.customerDatas ))
+
+        "accountProjects" ->
+            AccountProjects (AccountProjects.emptyModel flags flags.allTheData.accountProjectsRows)
 
         _ ->
             Error "Unknown Page"
@@ -89,8 +105,9 @@ view model =
                         (List.indexedMap (\idx t -> viewTab (getCurrentTab model.page) idx t) tabs)
                     , div
                         [ id ("#" ++ getTabContentId (getCurrentTab model.page) ++ "-fragment")
-                        , style [ ( "font-family", "Arial" ), ( "font-size", "12pt" ), ( "height", "100%" ), ( "overflow", "auto" ) ]
+                        , style [ ( "font-family", "Arial" ), ( "font-size", "12px" ), ( "height", "100%" ), ( "overflow", "auto" ) ]
                         , class "ui-tabs-panel ui-corner-bottom ui-widget-content"
+                        , ariaHidden False
                         ]
                         [ viewPage model.page ]
                     ]
@@ -105,14 +122,20 @@ viewPage page =
         NotLoaded ->
             text ""
 
+        AccountDetails subModel ->
+            Html.map AccountDetailsMsg (AccountDetails.view subModel)
+
         AccountContacts subModel ->
             Html.map AccountContactsMsg (AccountContacts.view subModel)
+
+        AccountContents subModel ->
+            Html.map AccountContentsMsg (AccountContents.view subModel)
 
         AccountEntitlements subModel ->
             Html.map AccountEntitlementsMsg (AccountEntitlements.view subModel)
 
-        AccountContents subModel ->
-            Html.map AccountContentsMsg (AccountContents.view subModel)
+        AccountProjects subModel ->
+            Html.map AccountProjectsMsg (AccountProjects.view subModel)
 
         Error errorStr ->
             text errorStr
@@ -120,9 +143,11 @@ viewPage page =
 
 type Msg
     = OpenPage String
+    | AccountDetailsMsg AccountDetails.Msg
     | AccountContactsMsg AccountContacts.Msg
-    | AccountEntitlementsMsg AccountEntitlements.Msg
     | AccountContentsMsg AccountContents.Msg
+    | AccountEntitlementsMsg AccountEntitlements.Msg
+    | AccountProjectsMsg AccountProjects.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -146,14 +171,20 @@ updatePage page msg model =
             , Cmd.none
             )
 
+        ( AccountDetailsMsg subMsg, AccountDetails subModel ) ->
+            toPage AccountDetails AccountDetailsMsg AccountDetails.update subMsg subModel
+
         ( AccountContactsMsg subMsg, AccountContacts subModel ) ->
             toPage AccountContacts AccountContactsMsg AccountContacts.update subMsg subModel
+
+        ( AccountContentsMsg subMsg, AccountContents subModel ) ->
+            toPage AccountContents AccountContentsMsg AccountContents.update subMsg subModel
 
         ( AccountEntitlementsMsg subMsg, AccountEntitlements subModel ) ->
             toPage AccountEntitlements AccountEntitlementsMsg AccountEntitlements.update subMsg subModel
 
-        ( AccountContentsMsg subMsg, AccountContents subModel ) ->
-            toPage AccountContents AccountContentsMsg AccountContents.update subMsg subModel
+        ( AccountProjectsMsg subMsg, AccountProjects subModel ) ->
+            toPage AccountProjects AccountProjectsMsg AccountProjects.update subMsg subModel
 
         _ ->
             ( model, Cmd.none )
@@ -179,14 +210,20 @@ getCurrentTab page =
         NotLoaded ->
             Nothing
 
+        AccountDetails _ ->
+            Just accountDetailsTab
+
         AccountContacts _ ->
             Just accountContactsTab
+
+        AccountContents _ ->
+            Just accountContentsTab
 
         AccountEntitlements _ ->
             Just accountEntitlementsTab
 
-        AccountContents _ ->
-            Just accountContentsTab
+        AccountProjects _ ->
+            Just accountProjectsTab
 
         Error _ ->
             Nothing
@@ -251,16 +288,13 @@ viewTab : Maybe Tab -> Int -> Tab -> Html Msg
 viewTab activeTab idx tab =
     let
         hrefText =
-            "#" ++ tab.name ++ "-fragment"
+            tab.name ++ "-fragment"
 
         hrefId =
             "ui-id-" ++ toString (idx + 6)
 
-        isActive =
-            ""
-
         closeDetailsStyle =
-            if tab.name == "accountDetails" then
+            if tab.name == "closeDetails" then
                 [ ( "float", "right" ) ]
             else
                 []
@@ -271,14 +305,27 @@ viewTab activeTab idx tab =
             else
                 ""
 
-        activeStr =
-            if activeTab == Just tab then
+        isActive =
+            activeTab == Just tab
+
+        activeClass =
+            if isActive then
                 "ui-tabs-active ui-state-active"
             else
                 ""
     in
-    li [ id idStr, role "tab", tabindex 0, class ("ui-tabs-tab ui-corner-top ui-state-default ui-tab " ++ activeStr), style closeDetailsStyle ]
-        [ a [ href hrefText, tabindex -1, role "presentation", class "ui-tabs-anchor", id hrefId, onClick (OpenPage tab.name) ]
+    li
+        [ id idStr
+        , role "tab"
+        , tabindex 0
+        , class ("ui-tabs-tab ui-corner-top ui-state-default ui-tab " ++ activeClass)
+        , ariaControls hrefText
+        , ariaLabelledby hrefId
+        , ariaSelected isActive
+        , ariaExpanded isActive
+        , style closeDetailsStyle
+        ]
+        [ a [ href ("#" ++ hrefText), tabindex -1, role "presentation", class "ui-tabs-anchor", id hrefId, onClick (OpenPage tab.name) ]
             [ span [] [ text tab.displayText ]
             ]
         ]
@@ -287,3 +334,4 @@ viewTab activeTab idx tab =
 
 -- todo
 -- onclick="closeDetails()"
+-- aria tags

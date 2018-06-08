@@ -6,117 +6,75 @@
 	<script src="elm.js"></script>
 	<script>
 		var element = document.getElementById("elm-code-is-loaded-here");
-		var dummyAccountContactsData =
-			[{
-				contentId: 0
-				, contentKey: "ABJ002"
-				, contact: "Nick Lee"
-				, account: "Ashburton Jersey, LTD."
-				, activeStatus: true
-				, contactStatus: "Client"
-				, contentTypeId: 10
-			}
-				, {
-				contentId: 6
-				, contentKey: "ABJ006"
-				, contact: "Richard Robinson"
-				, account: "Ashburton Jersey, LTD."
-				, activeStatus: true
-				, contactStatus: "Client"
-				, contentTypeId: 10
-			}
-				, {
-				contentId: 10
-				, contentKey: "ABJ010"
-				, contact: "Luke Gale"
-				, account: "Ashburton Jersey, LTD."
-				, activeStatus: true
-				, contactStatus: "Client"
-				, contentTypeId: 10
-			}
-				, {
-				contentId: 3
-				, contentKey: "DJA414"
-				, contact: "Shane de la Haye"
-				, account: "Ashburton Jersey, LTD."
-				, activeStatus: true
-				, contactStatus: "Client"
-				, contentTypeId: 11
-			}
-				, {
-				contentId: 4
-				, contentKey: "GXD831"
-				, contact: "Craig Farley"
-				, account: "Ashburton Jersey, LTD."
-				, activeStatus: false
-				, contactStatus: "Client"
-				, contentTypeId: 10
-			}
-			];
 
-		var dummyAccountContentsData =
-			[{
-				contentId: 1
-				, contentKey: "ASH02.RPT"
-				, title: "Nick Lee"
-				, format: "Ashburton Jersey, LTD."
-				, schedule: "Client"
-				, activeStatus: true
-				, contentTypeId: 10
-			}
-				, {
-				contentId: 1
-				, contentKey: "ASH02.RPT"
-				, title: "Nick Lee"
-				, format: "Ashburton Jersey, LTD."
-				, schedule: "Client"
-				, activeStatus: true
-				, contentTypeId: 10
-			}
-				, {
-				contentId: 1
-				, contentKey: "ASH02.RPT"
-				, title: "Nick Lee"
-				, format: "Ashburton Jersey, LTD."
-				, schedule: "Client"
-				, activeStatus: true
-				, contentTypeId: 10
-			}
-				, {
-				contentId: 1
-				, contentKey: "ASH02.RPT"
-				, title: "Nick Lee"
-				, format: "Ashburton Jersey, LTD."
-				, schedule: "Client"
-				, activeStatus: true
-				, contentTypeId: 11
-			}
-				, {
-				contentId: 1
-				, contentKey: "ASH02.RPT"
-				, title: "Nick Lee"
-				, format: "Ashburton Jersey, LTD."
-				, schedule: "Client"
-				, activeStatus: true
-				, contentTypeId: 10
-			}
-			];
+		var AccountDetails = {
+			accountName: "",
+			accountId: 0,
+			status: "",
+			salesRep: "",
+			type_: "",
+			subscription: "",
+			vote: "",
+			totalPayments: 0,
+			activeProductsPurchased: []
+		}
 
-		var app = Elm.Main.embed(element, { showExportBtnToggle: true, displayLength: "50" });
-		app.ports.loadDummyData.subscribe(function (pageStr) {
-			switch (pageStr) {
-				case "AccountContacts":
-					setTimeout(function () {
-						app.ports.loadAccountContactsData.send(dummyAccountContactsData);
-					}, 100);
-					break;
-				case "AccountContents":
-					setTimeout(function () {
-						app.ports.loadAccountContentsData.send(dummyAccountContentsData);
-					}, 100);
-					break;
-			}
-		});
+		var AccountContactsRow = {
+			contentId: 0,
+			contentKey: "",
+			contact: "",
+			account: "",
+			activeStatus: true,
+			contactStatus: "",
+			contentTypeId: 0
+		}
+
+		var AccountContentsRow = {
+			contentId: 0,
+			contentKey: "",
+			title: "",
+			format: "",
+			schedule: "",
+			activeStatus: true,
+			contentTypeId: 0
+		}
+
+		var CustomerData = {
+			code: "",
+			first_name: "",
+			last_name: "",
+			client_active: true
+		}
+
+		var AccountEntitlementsRow = {
+			contentId: 0,
+			contentKey: "",
+			customerCode: [],
+			contentActive: "",
+			relationshipType: [],
+			methodDesc: [],
+			contentTypeId: 0
+		}
+
+		var AccountProjectsRow = {
+			projectId: 0,
+			startDate: "",
+			completionDate: "",
+			contactName: "",
+			projectDescription: ""
+		}
+
+		var AllTheData = {
+			accountDetails: AccountDetails,
+			accountContactsRows: [AccountContactsRow],
+			accountContentsRows: [AccountContentsRow],
+			customerDatas: [CustomerData],
+			accountEntitlementsRows: [AccountEntitlementsRow],
+			accountProjectsRows: [AccountProjectsRow]
+		}
+
+		var app = Elm.Main.embed(element, { showExportBtnToggle: true, displayLength: "50", allTheData: AllTheData });
+
 	</script>
 </body>
 

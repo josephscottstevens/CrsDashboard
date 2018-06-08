@@ -13,13 +13,14 @@ type alias AllTheData =
     , accountContactsRows : List AccountContactsRow
     , accountContentsRows : List AccountContentsRow
     , customerDatas : List CustomerData
-    , accountEntitlementsRow : List AccountEntitlementsRow
+    , accountEntitlementsRows : List AccountEntitlementsRow
     , accountProjectsRows : List AccountProjectsRow
     }
 
 
 type alias AccountDetails =
-    { accountId : Int
+    { accountName : String
+    , accountId : Int
     , status : String
     , salesRep : String
     , type_ : String
