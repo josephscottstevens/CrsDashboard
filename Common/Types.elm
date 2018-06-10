@@ -1,5 +1,8 @@
 module Common.Types exposing (..)
 
+import Json.Decode as Decode
+import Json.Decode.Pipeline as Pipeline
+
 
 type alias Flags =
     { displayLength : String
@@ -9,20 +12,18 @@ type alias Flags =
 
 
 type alias AllTheData =
-    { accountDetails : AccountDetails
-    , accountContactsRows : List AccountContactsRow
-    , accountContentsRows : List AccountContentsRow
-    , customerDatas : List CustomerData
-    , accountEntitlementsRows : List AccountEntitlementsRow
-    , accountProjectsRows : List AccountProjectsRow
+    { company : Company
+    , clients : List Clients
+    , contents : List Contents
+    , projects : List Projects
     }
 
 
-type alias AccountDetails =
-    { accountName : String
-    , accountId : Int
+type alias Company =
+    { company : String
+    , company_id : Int
     , status : String
-    , salesRep : String
+    , salesperson : String
     , type_ : String
     , subscription : String
     , vote : String
@@ -31,51 +32,51 @@ type alias AccountDetails =
     }
 
 
-type alias AccountContactsRow =
-    { contentId : Int
-    , contentKey : Maybe String
-    , contact : Maybe String
-    , account : Maybe String
-    , activeStatus : Bool
-    , contactStatus : Maybe String
-    , contentTypeId : Int
+type alias Clients =
+    { id : Int
+    , code : String
+    , first_name : String
+    , last_name : String
+    , company : String
+    , client_active : Bool
+    , status : String
     }
 
 
-type alias AccountContentsRow =
+type alias Contents =
     { contentId : Int
     , contentKey : Maybe String
     , title : Maybe String
-    , format : Maybe String
-    , schedule : Maybe String
-    , activeStatus : Bool
-    , contentTypeId : Int
-    }
-
-
-type alias CustomerData =
-    { code : String
-    , first_name : String
-    , last_name : String
-    , client_active : Bool
-    }
-
-
-type alias AccountEntitlementsRow =
-    { contentId : Int
-    , contentKey : Maybe String
     , customerCode : List String
-    , contentActive : String
-    , relationshipType : List String
+    , defaultFormat : Maybe String
     , methodDesc : List String
+    , relationshipType : List String
+    , schedule : Maybe String
+    , contentActive : String
     , contentTypeId : Int
     }
 
 
-type alias AccountProjectsRow =
-    { projectId : Int
-    , startDate : Maybe String
-    , completionDate : Maybe String
-    , contactName : Maybe String
-    , projectDescription : Maybe String
+type alias Projects =
+    { id : Int
+    , proj_num : Int
+    , start_date : Int
+    , completion_date : Int
+    , first_name : Maybe String
+    , last_name : Maybe String
+    , proj_desc : Maybe String
     }
+
+
+decodeHospitilizationsRow : Decode.Decoder Company
+decodeHospitilizationsRow =
+    Decode.succeed Company
+        |> Pipeline.required "company" Decode.string
+        |> Pipeline.required "company_id" Decode.int
+        |> Pipeline.required "status" Decode.string
+        |> Pipeline.required "salesperson" Decode.string
+        |> Pipeline.required "Type" Decode.string
+        |> Pipeline.required "Customer_Class__c" Decode.string
+        |> Pipeline.required "Vote_Schedule__c" Decode.string
+        |> Pipeline.required "Annual_Billed__C" Decode.int
+        |> Pipeline.required "Active_Licensed_Products__c" (Decode.list Decode.string)

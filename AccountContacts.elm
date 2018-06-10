@@ -2,7 +2,7 @@ port module AccountContacts exposing (Model, Msg, emptyModel, init, subscription
 
 import Common.Functions as Functions
 import Common.Table as Table exposing (ColumnStyle(..))
-import Common.Types exposing (AccountContactsRow, Flags)
+import Common.Types exposing (..)
 import Html exposing (Html, a, br, button, div, h1, input, label, text)
 import Html.Attributes exposing (class, href, type_)
 import Html.Events exposing (onClick, onInput)
@@ -14,22 +14,22 @@ subscriptions model =
 
 
 type alias Model =
-    { rows : List AccountContactsRow
+    { rows : List Clients
     , tableState : Table.State
     , filterStr : String
     , showInactive : Bool
     }
 
 
-inactiveHelper : Model -> AccountContactsRow -> Bool
+inactiveHelper : Model -> Clients -> Bool
 inactiveHelper model row =
     if model.showInactive then
-        row.activeStatus
+        row.client_active
     else
         True
 
 
-searchHelper : Model -> AccountContactsRow -> Bool
+searchHelper : Model -> Clients -> Bool
 searchHelper model row =
     let
         searchText =
@@ -44,13 +44,13 @@ searchHelper model row =
 view : Model -> Html Msg
 view model =
     let
-        filteredRows =
+        filteredClientss =
             model.rows
                 |> List.filter (inactiveHelper model)
                 |> List.filter (searchHelper model)
     in
     div []
-        [ Table.view model.tableState filteredRows (gridConfig model)
+        [ Table.view model.tableState filteredClientss (gridConfig model)
         ]
 
 
@@ -85,51 +85,25 @@ update msg model =
             )
 
 
-codeHelper : AccountContactsRow -> Html Msg
-codeHelper row =
-    let
-        contentKey =
-            Maybe.withDefault "" row.contentKey
-    in
-    if row.contentTypeId /= 11 then
-        a
-            [ href "javascript:void(0)"
-            , onClick (OpenItem contentKey)
-            ]
-            [ text contentKey ]
-    else
-        text contentKey
-
-
-codeColumn : Table.Column AccountContactsRow Msg
-codeColumn =
-    { header = text "Code"
-    , viewData = codeHelper
-    , columnStyle = CustomStyle [ ( "width", "1%" ), ( "border-right", "1px solid black" ) ]
-    , sorter = Table.IncOrDec (List.sortBy (\t -> Functions.defaultString t.contentKey))
-    , columnId = "code"
-    }
-
-
-statusHelper : AccountContactsRow -> Maybe String
+statusHelper : Clients -> String
 statusHelper row =
-    if row.activeStatus then
-        Just "Active"
+    if row.client_active then
+        "Active"
     else
-        Just "Inactive"
+        "Inactive"
 
 
-columns : Model -> List (Table.Column AccountContactsRow Msg)
+columns : Model -> List (Table.Column Clients Msg)
 columns model =
-    [ codeColumn
-    , Table.stringColumn "Contact" .contact NoStyle
-    , Table.stringColumn "Account" .account NoStyle
+    [ Table.stringColumn "Code" .code NoStyle
+    , Table.stringColumn "Contact" (\t -> t.first_name ++ " " ++ t.last_name) NoStyle
+    , Table.stringColumn "Account" .company NoStyle
     , Table.stringColumn "Active Status" statusHelper NoStyle
-    , Table.stringColumn "Contact Status" .contactStatus NoStyle
+    , Table.stringColumn "Contact Status" .status NoStyle
     ]
 
 
-gridConfig : Model -> Table.Config AccountContactsRow Msg
+gridConfig : Model -> Table.Config Clients Msg
 gridConfig model =
     { domTableId = "AccountEntitlementsTable"
     , toolbar =
@@ -144,7 +118,7 @@ gridConfig model =
         ]
     , toMsg = SetTableState
     , columns = columns model
-    , toRowId = .contentId
+    , toRowId = .id
     }
 
 
@@ -155,7 +129,7 @@ init flags =
     )
 
 
-emptyModel : Flags -> List AccountContactsRow -> Model
+emptyModel : Flags -> List Clients -> Model
 emptyModel flags rows =
     { rows = rows
     , tableState = Table.init "Year" flags.displayLength

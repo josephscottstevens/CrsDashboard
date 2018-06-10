@@ -2,7 +2,7 @@ port module AccountProjects exposing (Model, Msg, emptyModel, init, subscription
 
 import Common.Functions as Functions
 import Common.Table as Table exposing (ColumnStyle(..))
-import Common.Types exposing (AccountProjectsRow, Flags)
+import Common.Types exposing (..)
 import Date exposing (..)
 import Html exposing (Html, a, br, button, div, h1, input, label, text)
 import Html.Attributes exposing (class, href, type_)
@@ -15,7 +15,7 @@ subscriptions model =
 
 
 type alias Model =
-    { rows : List AccountProjectsRow
+    { rows : List Projects
     , tableState : Table.State
     , filterStr : String
     , showInactive : Bool
@@ -31,7 +31,7 @@ type alias Model =
 --         True
 
 
-searchHelper : Model -> AccountProjectsRow -> Bool
+searchHelper : Model -> Projects -> Bool
 searchHelper model row =
     let
         searchText =
@@ -87,18 +87,30 @@ update msg model =
             )
 
 
-columns : Model -> List (Table.Column AccountProjectsRow Msg)
+contactHelper : Projects -> String
+contactHelper projects =
+    let
+        firstName =
+            Maybe.withDefault "" projects.first_name
+
+        lastName =
+            Maybe.withDefault "" projects.last_name
+    in
+    firstName ++ " " ++ lastName
+
+
+columns : Model -> List (Table.Column Projects Msg)
 columns model =
     [ --codeColumn,
-      Table.intColumn "#" .projectId NoStyle
-    , Table.stringColumn "Start Date" .startDate NoStyle
-    , Table.stringColumn "Completion Date" .completionDate NoStyle
-    , Table.stringColumn "Contact Name" .contactName NoStyle
-    , Table.stringColumn "Project Description" .projectDescription NoStyle
+      Table.intColumn "#" .proj_num NoStyle
+    , Table.intColumn "Start Date" .start_date NoStyle
+    , Table.intColumn "Completion Date" .completion_date NoStyle
+    , Table.stringColumn "Contact Name" contactHelper NoStyle
+    , Table.stringColumn "Project Description" (\t -> Maybe.withDefault "" t.proj_desc) NoStyle
     ]
 
 
-gridConfig : Model -> Table.Config AccountProjectsRow Msg
+gridConfig : Model -> Table.Config Projects Msg
 gridConfig model =
     { domTableId = "AccountProjectsTable"
     , toolbar =
@@ -113,7 +125,7 @@ gridConfig model =
         ]
     , toMsg = SetTableState
     , columns = columns model
-    , toRowId = .projectId
+    , toRowId = .id
     }
 
 
@@ -124,7 +136,7 @@ init flags =
     )
 
 
-emptyModel : Flags -> List AccountProjectsRow -> Model
+emptyModel : Flags -> List Projects -> Model
 emptyModel flags rows =
     { rows = rows
     , tableState = Table.init "Year" flags.displayLength
