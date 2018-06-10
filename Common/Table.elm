@@ -14,6 +14,7 @@ module Common.Table
         , intColumn
         , stringColumn
         , view
+        , viewPagination
         )
 
 import Common.Functions as Functions
@@ -219,6 +220,29 @@ viewSelect rowsPerPage =
             "-1"
 
 
+viewPagination : State -> (State -> msg) -> Html msg
+viewPagination state toMsg =
+    let
+        optionLength =
+            viewSelect state.rowsPerPage
+    in
+    div
+        [ class "detailsEntitlementToolbarElement", id "searchResultsTable_length" ]
+        [ label []
+            [ text "Show "
+            , select [ id "pageLengthSelect", Events.onInput (\t -> toMsg { state | rowsPerPage = pageSelect t }) ]
+                [ option
+                    [ value "50", selected (optionLength == "50") ]
+                    [ text "50" ]
+                , option [ value "100", selected (optionLength == "100") ] [ text "100" ]
+                , option [ value "150", selected (optionLength == "150") ] [ text "150" ]
+                , option [ value "200", selected (optionLength == "200") ] [ text "200" ]
+                , option [ value "-1", selected (optionLength == "-1") ] [ text "All" ]
+                ]
+            ]
+        ]
+
+
 view : State -> List data -> Config data msg -> Html msg
 view state rows config =
     let
@@ -241,27 +265,9 @@ view state rows config =
         optionLength =
             viewSelect state.rowsPerPage
     in
-    div [ id "searchResultsTable_wrapper" ]
+    div [ id (config.domTableId ++ "_wrapper"), class "dataTables_wrapper" ]
         [ div [ class "top" ]
-            [ div [ class "detailsEntitlementToolbarElement", id "searchResultsTable_length" ]
-                ([ label []
-                    [ text "Show "
-                    , select [ id "pageLengthSelect", Events.onInput (\t -> config.toMsg { state | rowsPerPage = pageSelect t }) ]
-                        [ option
-                            [ value "50", selected (optionLength == "50") ]
-                            [ text "50" ]
-                        , option [ value "100", selected (optionLength == "100") ] [ text "100" ]
-                        , option [ value "150", selected (optionLength == "150") ] [ text "150" ]
-                        , option [ value "200", selected (optionLength == "200") ] [ text "200" ]
-                        , option [ value "-1", selected (optionLength == "-1") ] [ text "All" ]
-                        ]
-                    ]
-                 ]
-                    ++ config.toolbar
-                )
-
-            --, pagingView state totalRows filteredRows config.toMsg
-            ]
+            config.toolbar
         , table
             [ cellspacing "0"
             , cellpadding "0"

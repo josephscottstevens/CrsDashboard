@@ -3,8 +3,8 @@ port module AccountEntitlements exposing (Model, Msg, emptyModel, init, subscrip
 import Common.Functions as Functions
 import Common.Table as Table exposing (ColumnStyle(CustomStyle, Width))
 import Common.Types exposing (AccountEntitlementsRow, CustomerData, Flags)
-import Html exposing (Html, a, br, button, div, h1, input, label, text)
-import Html.Attributes exposing (class, href, type_)
+import Html exposing (Html, a, br, button, div, h1, input, label, option, select, span, table, tbody, td, text, th, thead, tr)
+import Html.Attributes exposing (attribute, checked, class, classList, colspan, disabled, href, id, rowspan, selected, style, target, type_, value)
 import Html.Events exposing (onClick, onInput)
 
 
@@ -221,13 +221,15 @@ sortMaybeString t =
 
 gridConfig : Model -> Table.Config AccountEntitlementsRow Msg
 gridConfig model =
-    { domTableId = "AccountEntitlementsTable"
+    { domTableId = "searchResultsTable"
     , toolbar =
-        [ --div [ class "detailsEntitlementToolbarElementLeft" ]
-          --  [ input [ type_ "checkbox", onClick ToggleShowInactive ] []
-          --  , label [] [ text "Show Inactive Content" ]
-          --  ]
-          div [ class "detailsEntitlementToolbarElementLeft" ]
+        [ Table.viewPagination model.tableState SetTableState
+
+        --div [ class "detailsEntitlementToolbarElementLeft" ]
+        --  [ input [ type_ "checkbox", onClick ToggleShowInactive ] []
+        --  , label [] [ text "Show Inactive Content" ]
+        --  ]
+        , div [ class "detailsEntitlementToolbarElementLeft" ]
             [ label [] [ text "Contact Search " ]
             , input [ type_ "text", onInput UpdateFilter ] []
             ]
@@ -238,6 +240,8 @@ gridConfig model =
               else
                 text ""
             ]
+
+        --, pagingView state totalRows filteredRows config.toMsg
         ]
     , toMsg = SetTableState
     , columns = columns model
