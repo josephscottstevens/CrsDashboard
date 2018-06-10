@@ -6,10 +6,12 @@ import AccountDetails exposing (Model, emptyModel, init, subscriptions, update, 
 import AccountEntitlements exposing (Model, emptyModel, init, subscriptions, update, view)
 import AccountProjects exposing (Model, emptyModel, init, subscriptions, update, view)
 import Common.Html exposing (ariaControls, ariaExpanded, ariaHidden, ariaLabelledby, ariaSelected, role)
-import Common.Types exposing (AllTheData, Flags)
+import Common.Types exposing (AllTheData, Flags, decodeCompany)
 import Html exposing (Html, a, br, button, div, h1, input, label, li, span, table, tbody, td, text, tr, ul)
 import Html.Attributes exposing (class, href, id, style, tabindex)
 import Html.Events exposing (onClick)
+import Json.Decode as Decode
+import Json.Decode.Pipeline as Pipeline
 
 
 port openPage : (String -> msg) -> Sub msg
@@ -77,7 +79,12 @@ getPage : Flags -> String -> Page
 getPage flags pageStr =
     case pageStr of
         "accountDetails" ->
-            AccountDetails (AccountDetails.emptyModel flags.allTheData.company)
+            case Decode.decodeValue decodeCompany flags.allTheData.company of
+                Ok company ->
+                    AccountDetails (AccountDetails.emptyModel company)
+
+                Err str ->
+                    Error str
 
         "accountContacts" ->
             AccountContacts (AccountContacts.emptyModel flags flags.allTheData.clients)

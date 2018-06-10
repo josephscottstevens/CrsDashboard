@@ -12,7 +12,7 @@ type alias Flags =
 
 
 type alias AllTheData =
-    { company : Company
+    { company : Decode.Value
     , clients : List Clients
     , contents : List Contents
     , projects : List Projects
@@ -68,9 +68,9 @@ type alias Projects =
     }
 
 
-decodeHospitilizationsRow : Decode.Decoder Company
-decodeHospitilizationsRow =
-    Decode.succeed Company
+decodeCompany : Decode.Decoder Company
+decodeCompany =
+    Pipeline.decode Company
         |> Pipeline.required "company" Decode.string
         |> Pipeline.required "company_id" Decode.int
         |> Pipeline.required "status" Decode.string
