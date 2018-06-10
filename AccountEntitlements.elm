@@ -2,7 +2,7 @@ port module AccountEntitlements exposing (Model, Msg, emptyModel, init, subscrip
 
 import Common.Functions as Functions
 import Common.Table as Table exposing (ColumnStyle(CustomStyle, Width))
-import Common.Types exposing (AccountEntitlementsRow, CustomerData, Flags)
+import Common.Types exposing (..)
 import Html exposing (Html, a, br, button, div, h1, input, label, option, select, span, table, tbody, td, text, th, thead, tr)
 import Html.Attributes exposing (attribute, checked, class, classList, colspan, disabled, href, id, rowspan, selected, style, target, type_, value)
 import Html.Events exposing (onClick, onInput)
@@ -20,8 +20,8 @@ subscriptions model =
 
 
 type alias Model =
-    { rows : List AccountEntitlementsRow
-    , clients : List CustomerData
+    { rows : List Contents
+    , clients : List Clients
     , tableState : Table.State
     , filterStr : String
     , showInactive : Bool
@@ -90,7 +90,7 @@ update msg model =
             )
 
 
-filterColumns : Model -> List CustomerData -> List CustomerData
+filterColumns : Model -> List Clients -> List Clients
 filterColumns model items =
     let
         filterStr =
@@ -108,8 +108,8 @@ filterColumns model items =
     List.filter filterHelper items
 
 
-formatCustomerData : CustomerData -> String
-formatCustomerData customer =
+formatClients : Clients -> String
+formatClients customer =
     customer.first_name ++ " " ++ customer.last_name
 
 
@@ -117,12 +117,12 @@ formatCustomerData customer =
 --++ "<br />(" ++ "<a href=\"javascript:void(0)\" onclick=\"openItem('contact','" ++ customer.code ++ "')\">" ++ customer.code ++ "</a>" ++ ")"
 
 
-customerDataToString : CustomerData -> String
+customerDataToString : Clients -> String
 customerDataToString customer =
-    formatCustomerData customer ++ (" (" ++ customer.code ++ ")")
+    formatClients customer ++ (" (" ++ customer.code ++ ")")
 
 
-customerDataToHtml : CustomerData -> Html Msg
+customerDataToHtml : Clients -> Html Msg
 customerDataToHtml customer =
     div []
         [ text (customer.first_name ++ " " ++ customer.last_name)
@@ -135,7 +135,7 @@ customerDataToHtml customer =
         ]
 
 
-rowHelper : String -> AccountEntitlementsRow -> String
+rowHelper : String -> Contents -> String
 rowHelper custCode row =
     if List.member custCode row.customerCode then
         if List.member "crsEntitlementContent" row.relationshipType && List.member "pushPreferenceContent" row.relationshipType then
@@ -154,7 +154,7 @@ rowHelper custCode row =
         ""
 
 
-contentHelper : AccountEntitlementsRow -> Html Msg
+contentHelper : Contents -> Html Msg
 contentHelper row =
     let
         contentKey =
@@ -181,7 +181,7 @@ modelToHeader model =
     [ "" ] ++ List.map (\client -> customerDataToString client) (List.filter (\t -> t.client_active) model.clients)
 
 
-rowToList : Model -> AccountEntitlementsRow -> List String
+rowToList : Model -> Contents -> List String
 rowToList model row =
     [ Maybe.withDefault "" row.contentKey
     ]
@@ -190,7 +190,7 @@ rowToList model row =
             (filterColumns model model.clients)
 
 
-columns : Model -> List (Table.Column AccountEntitlementsRow Msg)
+columns : Model -> List (Table.Column Contents Msg)
 columns model =
     [ { header = text ""
       , viewData = contentHelper
@@ -205,7 +205,7 @@ columns model =
                 , viewData = \t -> text (rowHelper customer.code t)
                 , columnStyle = CustomStyle [ ( "width", "1%" ), ( "text-align", "center" ) ]
                 , sorter = Table.IncOrDec (List.sortBy (\t -> sortMaybeString (rowHelper customer.code t)))
-                , columnId = formatCustomerData customer
+                , columnId = formatClients customer
                 }
             )
             (filterColumns model model.clients)
@@ -219,7 +219,7 @@ sortMaybeString t =
         t
 
 
-gridConfig : Model -> Table.Config AccountEntitlementsRow Msg
+gridConfig : Model -> Table.Config Contents Msg
 gridConfig model =
     { domTableId = "searchResultsTable"
     , toolbar =
@@ -256,7 +256,7 @@ init flags =
     )
 
 
-emptyModel : Flags -> ( List AccountEntitlementsRow, List CustomerData ) -> Model
+emptyModel : Flags -> ( List Contents, List Clients ) -> Model
 emptyModel flags ( rows, clients ) =
     { rows = rows
     , clients = clients

@@ -2,7 +2,7 @@ module AccountDetails exposing (Model, Msg, emptyModel, init, subscriptions, upd
 
 import Common.Functions as Functions
 import Common.Html exposing (border, cellpadding, cellspacing, role)
-import Common.Types exposing (AccountDetails, Flags)
+import Common.Types exposing (..)
 import Html exposing (Html, a, br, button, div, h1, input, label, span, table, tbody, td, text, tr)
 import Html.Attributes exposing (class, href, id, style, type_)
 import Html.Events exposing (onClick, onInput)
@@ -14,7 +14,7 @@ subscriptions model =
 
 
 type alias Model =
-    { accountDetails : AccountDetails
+    { accountDetails : Company
     }
 
 
@@ -55,7 +55,7 @@ view model =
         [ tbody []
             [ tr []
                 [ td [ style [ ( "font-weight", "bold" ), ( "font-size", "22px" ), ( "padding-bottom", "1%" ), ( "color", "#565353" ) ] ]
-                    [ text accountDetails.accountName
+                    [ text accountDetails.company
                     , span [ style [ ( "padding-left", "1%" ), ( "font-weight", "normal" ), ( "font-size", "12px" ), ( "color", "black" ) ] ]
                         [ text "( "
                         , span [ style [ ( "font-weight", "bold" ), ( "color", "green" ), ( "font-size", "13px" ) ] ]
@@ -65,9 +65,9 @@ view model =
                         ]
                     ]
                 ]
-            , trRow "Account Id" (toString accountDetails.accountId)
+            , trRow "Account Id" (toString accountDetails.company_id)
             , trRow "Status" accountDetails.status
-            , trRow "Sales Rep" accountDetails.salesRep
+            , trRow "Sales Rep" accountDetails.salesperson
             , trRow "Type" accountDetails.type_
             , trRow "Subscription" accountDetails.subscription
             , trRow "Vote" accountDetails.vote
@@ -95,14 +95,14 @@ update msg model =
             )
 
 
-init : AccountDetails -> ( Model, Cmd Msg )
+init : Company -> ( Model, Cmd Msg )
 init accountDetails =
     ( emptyModel accountDetails
     , Cmd.none
     )
 
 
-emptyModel : AccountDetails -> Model
+emptyModel : Company -> Model
 emptyModel accountDetails =
     { accountDetails = accountDetails
     }

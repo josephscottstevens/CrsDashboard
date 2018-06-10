@@ -77,19 +77,19 @@ getPage : Flags -> String -> Page
 getPage flags pageStr =
     case pageStr of
         "accountDetails" ->
-            AccountDetails (AccountDetails.emptyModel flags.allTheData.accountDetails)
+            AccountDetails (AccountDetails.emptyModel flags.allTheData.company)
 
         "accountContacts" ->
-            AccountContacts (AccountContacts.emptyModel flags flags.allTheData.accountContactsRows)
+            AccountContacts (AccountContacts.emptyModel flags flags.allTheData.clients)
 
         "accountContents" ->
-            AccountContents (AccountContents.emptyModel flags flags.allTheData.accountContentsRows)
+            AccountContents (AccountContents.emptyModel flags flags.allTheData.contents)
 
         "accountEntitlements" ->
-            AccountEntitlements (AccountEntitlements.emptyModel flags ( flags.allTheData.accountEntitlementsRows, flags.allTheData.customerDatas ))
+            AccountEntitlements (AccountEntitlements.emptyModel flags ( flags.allTheData.contents, flags.allTheData.clients ))
 
         "accountProjects" ->
-            AccountProjects (AccountProjects.emptyModel flags flags.allTheData.accountProjectsRows)
+            AccountProjects (AccountProjects.emptyModel flags flags.allTheData.projects)
 
         _ ->
             Error "Unknown Page"

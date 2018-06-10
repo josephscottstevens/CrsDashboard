@@ -93,12 +93,12 @@ intColumn header data columnStyle =
     }
 
 
-stringColumn : String -> (data -> Maybe String) -> ColumnStyle -> Column data msg
+stringColumn : String -> (data -> String) -> ColumnStyle -> Column data msg
 stringColumn header data columnStyle =
     { header = text header
-    , viewData = data >> (\t -> text (Maybe.withDefault "" t))
+    , viewData = data >> (\t -> text t)
     , columnStyle = columnStyle
-    , sorter = defaultSort data
+    , sorter = increasingOrDecreasingBy data
     , columnId = header
     }
 
