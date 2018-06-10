@@ -33,13 +33,13 @@ blockSize =
 
 init : String -> String -> State
 init sortedColumnheader displayLength =
-        { selectedId = Nothing
-        , openDropdownId = Nothing
-        , pageIndex = 0
-        , rowsPerPage = pageSelect displayLength
-        , sortField = sortedColumnheader
-        , sortAscending = True
-        }
+    { selectedId = Nothing
+    , openDropdownId = Nothing
+    , pageIndex = 0
+    , rowsPerPage = pageSelect displayLength
+    , sortField = sortedColumnheader
+    , sortAscending = True
+    }
 
 
 type RowsPerPage
@@ -299,8 +299,8 @@ viewTr state rows config =
 
         rowClass ctr =
             classList
-                [ ( "even", ctr % 2 == 0 )
-                , ( "odd", ctr % 2 == 1 )
+                [ ( "odd", ctr % 2 == 0 )
+                , ( "even", ctr % 2 == 1 )
                 ]
 
         standardTr ctr row =

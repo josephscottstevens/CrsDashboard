@@ -8,11 +8,13 @@ module Common.Html
         , border
         , cellpadding
         , cellspacing
+        , codeHelper
         , role
         )
 
 import Html exposing (Attribute, Html, a, br, button, div, h1, input, label, li, span, text, ul)
 import Html.Attributes exposing (class, href, id, property, tabindex)
+import Html.Events exposing (onClick)
 import Json.Encode as Encode
 
 
@@ -29,6 +31,22 @@ boolToString bool =
 
 
 -- Public
+
+
+codeHelper : { a | contentKey : Maybe String, contentTypeId : number } -> (String -> msg) -> Html msg
+codeHelper row toMsg =
+    let
+        contentKey =
+            Maybe.withDefault "" row.contentKey
+    in
+    if row.contentTypeId /= 11 then
+        a
+            [ href "javascript:void(0)"
+            , onClick (toMsg contentKey)
+            ]
+            [ text contentKey ]
+    else
+        text contentKey
 
 
 role : String -> Attribute msg
