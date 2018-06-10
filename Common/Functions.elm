@@ -3,6 +3,7 @@ port module Common.Functions exposing (..)
 import Date
 import Date.Extra
 import Dict exposing (Dict)
+import Json.Decode as Decode
 
 
 port openItem : String -> Cmd msg
@@ -173,3 +174,18 @@ maybeStringToInt str =
 
         Err _ ->
             Nothing
+
+
+decodeMaybeString : Decode.Decoder (Maybe String)
+decodeMaybeString =
+    Decode.maybe Decode.string
+
+
+decodeMaybeStringToString : Decode.Decoder (Maybe String) -> Decode.Decoder String
+decodeMaybeStringToString =
+    Decode.map (Maybe.withDefault "")
+
+
+decodeString : Decode.Decoder String
+decodeString =
+    decodeMaybeString |> decodeMaybeStringToString

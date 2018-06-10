@@ -1,5 +1,6 @@
 module Common.Types exposing (..)
 
+import Common.Functions exposing (decodeString)
 import Json.Decode as Decode
 import Json.Decode.Pipeline as Pipeline
 
@@ -71,12 +72,12 @@ type alias Projects =
 decodeCompany : Decode.Decoder Company
 decodeCompany =
     Pipeline.decode Company
-        |> Pipeline.required "company" Decode.string
+        |> Pipeline.required "company" decodeString
         |> Pipeline.required "company_id" Decode.int
-        |> Pipeline.required "status" Decode.string
-        |> Pipeline.required "salesperson" Decode.string
-        |> Pipeline.required "Type" Decode.string
-        |> Pipeline.required "Customer_Class__c" Decode.string
-        |> Pipeline.required "Vote_Schedule__c" Decode.string
+        |> Pipeline.required "status" decodeString
+        |> Pipeline.required "salesperson" decodeString
+        |> Pipeline.required "Type" decodeString
+        |> Pipeline.required "Customer_Class__c" decodeString
+        |> Pipeline.required "Vote_Schedule__c" decodeString
         |> Pipeline.required "Annual_Billed__C" Decode.int
-        |> Pipeline.required "Active_Licensed_Products__c" (Decode.list Decode.string)
+        |> Pipeline.required "Active_Licensed_Products__c" (Decode.list decodeString)
