@@ -6,12 +6,11 @@ import AccountDetails exposing (Model, emptyModel, init, subscriptions, update, 
 import AccountEntitlements exposing (Model, emptyModel, init, subscriptions, update, view)
 import AccountProjects exposing (Model, emptyModel, init, subscriptions, update, view)
 import Common.Html exposing (ariaControls, ariaExpanded, ariaHidden, ariaLabelledby, ariaSelected, role)
-import Common.Types exposing (AllTheData, Flags, decodeCompany)
+import Common.Types exposing (..)
 import Html exposing (Html, a, br, button, div, h1, input, label, li, span, table, tbody, td, text, tr, ul)
 import Html.Attributes exposing (class, href, id, style, tabindex)
 import Html.Events exposing (onClick)
 import Json.Decode as Decode
-import Json.Decode.Pipeline as Pipeline
 
 
 port openPage : (String -> msg) -> Sub msg
@@ -87,16 +86,41 @@ getPage flags pageStr =
                     Error str
 
         "accountContacts" ->
-            AccountContacts (AccountContacts.emptyModel flags flags.allTheData.clients)
+            case Decode.decodeValue (Decode.list decodeClients) flags.allTheData.clients of
+                Ok companies ->
+                    AccountContacts (AccountContacts.emptyModel flags companies)
+
+                Err str ->
+                    Error str
 
         "accountContents" ->
-            AccountContents (AccountContents.emptyModel flags flags.allTheData.contents)
+            case Decode.decodeValue (Decode.list decodeContents) flags.allTheData.contents of
+                Ok contents ->
+                    AccountContents (AccountContents.emptyModel flags contents)
+
+                Err str ->
+                    Error str
 
         "accountEntitlements" ->
-            AccountEntitlements (AccountEntitlements.emptyModel flags ( flags.allTheData.contents, flags.allTheData.clients ))
+            case Decode.decodeValue (Decode.list decodeContents) flags.allTheData.contents of
+                Ok contents ->
+                    case Decode.decodeValue (Decode.list decodeClients) flags.allTheData.clients of
+                        Ok clients ->
+                            AccountEntitlements (AccountEntitlements.emptyModel flags ( contents, clients ))
+
+                        Err str ->
+                            Error str
+
+                Err str ->
+                    Error str
 
         "accountProjects" ->
-            AccountProjects (AccountProjects.emptyModel flags flags.allTheData.projects)
+            case Decode.decodeValue (Decode.list decodeProjects) flags.allTheData.projects of
+                Ok projects ->
+                    AccountProjects (AccountProjects.emptyModel flags projects)
+
+                Err str ->
+                    Error str
 
         _ ->
             Error "Unknown Page"

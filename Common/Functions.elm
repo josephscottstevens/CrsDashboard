@@ -189,3 +189,24 @@ decodeMaybeStringToString =
 decodeString : Decode.Decoder String
 decodeString =
     decodeMaybeString |> decodeMaybeStringToString
+
+
+decodeMaybeInt : Decode.Decoder (Maybe Int)
+decodeMaybeInt =
+    Decode.maybe Decode.int
+
+
+decodeYnBoolHelp : String -> Decode.Decoder Bool
+decodeYnBoolHelp t =
+    if t == "Y" then
+        Decode.succeed True
+    else if t == "N" then
+        Decode.succeed False
+    else
+        Decode.fail "Invalid bool"
+
+
+decodeYnBool : Decode.Decoder Bool
+decodeYnBool =
+    Decode.string
+        |> Decode.andThen decodeYnBoolHelp

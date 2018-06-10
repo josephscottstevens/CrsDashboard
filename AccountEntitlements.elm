@@ -36,9 +36,9 @@ view model =
             List.filter
                 (\t ->
                     if model.showInactive then
-                        t.contentActive == "Y"
+                        t.contentActive
                     else
-                        t.contentActive == "Y"
+                        t.contentActive
                 )
                 model.rows
     in
@@ -156,18 +156,14 @@ rowHelper custCode row =
 
 contentHelper : Contents -> Html Msg
 contentHelper row =
-    let
-        contentKey =
-            Maybe.withDefault "" row.contentKey
-    in
     if row.contentTypeId /= 11 then
         a
             [ href "javascript:void(0)"
-            , onClick (OpenItem contentKey)
+            , onClick (OpenItem row.contentKey)
             ]
-            [ text contentKey ]
+            [ text row.contentKey ]
     else
-        text contentKey
+        text row.contentKey
 
 
 excelExportData : Model -> List (List String)
@@ -183,7 +179,7 @@ modelToHeader model =
 
 rowToList : Model -> Contents -> List String
 rowToList model row =
-    [ Maybe.withDefault "" row.contentKey
+    [ row.contentKey
     ]
         ++ List.map
             (\customer -> rowHelper customer.code row)
@@ -195,7 +191,7 @@ columns model =
     [ { header = text ""
       , viewData = contentHelper
       , columnStyle = CustomStyle [ ( "width", "1%" ), ( "border-right", "1px solid black" ) ]
-      , sorter = Table.IncOrDec (List.sortBy (\t -> Functions.defaultString t.contentKey))
+      , sorter = Table.IncOrDec (List.sortBy .contentKey)
       , columnId = "content"
       }
     ]
@@ -204,7 +200,7 @@ columns model =
                 { header = customerDataToHtml customer
                 , viewData = \t -> text (rowHelper customer.code t)
                 , columnStyle = CustomStyle [ ( "width", "1%" ), ( "text-align", "center" ) ]
-                , sorter = Table.IncOrDec (List.sortBy (\t -> sortMaybeString (rowHelper customer.code t)))
+                , sorter = Table.IncOrDec (List.sortBy (\t -> rowHelper customer.code t))
                 , columnId = formatClients customer
                 }
             )

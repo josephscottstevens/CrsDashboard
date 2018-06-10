@@ -1,6 +1,6 @@
 module Common.Types exposing (..)
 
-import Common.Functions exposing (decodeString)
+import Common.Functions exposing (decodeMaybeInt, decodeString, decodeYnBool)
 import Json.Decode as Decode
 import Json.Decode.Pipeline as Pipeline
 
@@ -14,9 +14,9 @@ type alias Flags =
 
 type alias AllTheData =
     { company : Decode.Value
-    , clients : List Clients
-    , contents : List Contents
-    , projects : List Projects
+    , clients : Decode.Value
+    , contents : Decode.Value
+    , projects : Decode.Value
     }
 
 
@@ -46,14 +46,14 @@ type alias Clients =
 
 type alias Contents =
     { contentId : Int
-    , contentKey : Maybe String
-    , title : Maybe String
+    , contentKey : String
+    , title : String
     , customerCode : List String
-    , defaultFormat : Maybe String
+    , defaultFormat : String
     , methodDesc : List String
     , relationshipType : List String
-    , schedule : Maybe String
-    , contentActive : String
+    , schedule : String
+    , contentActive : Bool
     , contentTypeId : Int
     }
 
@@ -61,11 +61,11 @@ type alias Contents =
 type alias Projects =
     { id : Int
     , proj_num : Int
-    , start_date : Maybe Int
+    , start_date : Int
     , completion_date : Maybe Int
-    , first_name : Maybe String
-    , last_name : Maybe String
-    , proj_desc : Maybe String
+    , first_name : String
+    , last_name : String
+    , proj_desc : String
     }
 
 
@@ -81,3 +81,42 @@ decodeCompany =
         |> Pipeline.required "Vote_Schedule__c" decodeString
         |> Pipeline.required "Annual_Billed__C" Decode.int
         |> Pipeline.required "Active_Licensed_Products__c" (Decode.list decodeString)
+
+
+decodeClients : Decode.Decoder Clients
+decodeClients =
+    Pipeline.decode Clients
+        |> Pipeline.required "id" Decode.int
+        |> Pipeline.required "code" decodeString
+        |> Pipeline.required "first_name" decodeString
+        |> Pipeline.required "last_name" decodeString
+        |> Pipeline.required "company" decodeString
+        |> Pipeline.required "client_active" Decode.bool
+        |> Pipeline.required "status" decodeString
+
+
+decodeContents : Decode.Decoder Contents
+decodeContents =
+    Pipeline.decode Contents
+        |> Pipeline.required "contentId" Decode.int
+        |> Pipeline.required "contentKey" decodeString
+        |> Pipeline.required "title" decodeString
+        |> Pipeline.required "customerCode" (Decode.list decodeString)
+        |> Pipeline.required "defaultFormat" decodeString
+        |> Pipeline.required "methodDesc" (Decode.list decodeString)
+        |> Pipeline.required "relationshipType" (Decode.list decodeString)
+        |> Pipeline.required "schedule" decodeString
+        |> Pipeline.required "contentActive" decodeYnBool
+        |> Pipeline.required "contentTypeId" Decode.int
+
+
+decodeProjects : Decode.Decoder Projects
+decodeProjects =
+    Pipeline.decode Projects
+        |> Pipeline.required "id" Decode.int
+        |> Pipeline.required "proj_num" Decode.int
+        |> Pipeline.required "start_date" Decode.int
+        |> Pipeline.required "completion_date" decodeMaybeInt
+        |> Pipeline.required "first_name" decodeString
+        |> Pipeline.required "last_name" decodeString
+        |> Pipeline.required "proj_desc" decodeString

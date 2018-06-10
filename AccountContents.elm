@@ -24,7 +24,7 @@ type alias Model =
 inactiveHelper : Model -> Contents -> Bool
 inactiveHelper model row =
     if model.showInactive then
-        row.contentActive == "Y"
+        row.contentActive
     else
         True
 
@@ -87,18 +87,14 @@ update msg model =
 
 codeHelper : Contents -> Html Msg
 codeHelper row =
-    let
-        contentKey =
-            Maybe.withDefault "" row.contentKey
-    in
     if row.contentTypeId /= 11 then
         a
             [ href "javascript:void(0)"
-            , onClick (OpenItem contentKey)
+            , onClick (OpenItem row.contentKey)
             ]
-            [ text contentKey ]
+            [ text row.contentKey ]
     else
-        text contentKey
+        text row.contentKey
 
 
 codeColumn : Table.Column Contents Msg
@@ -106,14 +102,14 @@ codeColumn =
     { header = text "Code"
     , viewData = codeHelper
     , columnStyle = CustomStyle [ ( "width", "1%" ), ( "border-right", "1px solid black" ) ]
-    , sorter = Table.IncOrDec (List.sortBy (\t -> Functions.defaultString t.contentKey))
+    , sorter = Table.IncOrDec (List.sortBy .contentKey)
     , columnId = "code"
     }
 
 
 statusHelper : Contents -> String
 statusHelper row =
-    if row.contentActive == "Y" then
+    if row.contentActive then
         "Active"
     else
         "Inactive"
@@ -122,10 +118,10 @@ statusHelper row =
 columns : Model -> List (Table.Column Contents Msg)
 columns model =
     [ codeColumn
-    , Table.stringColumn "Content Key" (\t -> Functions.defaultString t.contentKey) NoStyle
-    , Table.stringColumn "Title" (\t -> Functions.defaultString t.title) NoStyle
-    , Table.stringColumn "Format" (\t -> Functions.defaultString t.defaultFormat) NoStyle
-    , Table.stringColumn "Schedule" (\t -> Functions.defaultString t.schedule) NoStyle
+    , Table.stringColumn "Content Key" .contentKey NoStyle
+    , Table.stringColumn "Title" .title NoStyle
+    , Table.stringColumn "Format" .defaultFormat NoStyle
+    , Table.stringColumn "Schedule" .schedule NoStyle
     , Table.stringColumn "Active Status" statusHelper NoStyle
     ]
 

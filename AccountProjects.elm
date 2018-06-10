@@ -89,24 +89,17 @@ update msg model =
 
 contactHelper : Projects -> String
 contactHelper projects =
-    let
-        firstName =
-            Maybe.withDefault "" projects.first_name
-
-        lastName =
-            Maybe.withDefault "" projects.last_name
-    in
-    firstName ++ " " ++ lastName
+    projects.first_name ++ " " ++ projects.last_name
 
 
 columns : Model -> List (Table.Column Projects Msg)
 columns model =
     [ --codeColumn,
       Table.intColumn "#" .proj_num NoStyle
-    , Table.intColumn "Start Date" (\t -> Maybe.withDefault 0 t.start_date) NoStyle
+    , Table.intColumn "Start Date" .start_date NoStyle
     , Table.intColumn "Completion Date" (\t -> Maybe.withDefault 0 t.completion_date) NoStyle
     , Table.stringColumn "Contact Name" contactHelper NoStyle
-    , Table.stringColumn "Project Description" (\t -> Maybe.withDefault "" t.proj_desc) NoStyle
+    , Table.stringColumn "Project Description" .proj_desc NoStyle
     ]
 
 
