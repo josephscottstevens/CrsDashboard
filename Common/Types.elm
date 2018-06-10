@@ -60,8 +60,8 @@ type alias Contents =
 type alias Projects =
     { id : Int
     , proj_num : Int
-    , start_date : Int
-    , completion_date : Int
+    , start_date : Maybe Int
+    , completion_date : Maybe Int
     , first_name : Maybe String
     , last_name : Maybe String
     , proj_desc : Maybe String

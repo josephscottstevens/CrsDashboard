@@ -103,8 +103,8 @@ columns : Model -> List (Table.Column Projects Msg)
 columns model =
     [ --codeColumn,
       Table.intColumn "#" .proj_num NoStyle
-    , Table.intColumn "Start Date" .start_date NoStyle
-    , Table.intColumn "Completion Date" .completion_date NoStyle
+    , Table.intColumn "Start Date" (\t -> Maybe.withDefault 0 t.start_date) NoStyle
+    , Table.intColumn "Completion Date" (\t -> Maybe.withDefault 0 t.completion_date) NoStyle
     , Table.stringColumn "Contact Name" contactHelper NoStyle
     , Table.stringColumn "Project Description" (\t -> Maybe.withDefault "" t.proj_desc) NoStyle
     ]
