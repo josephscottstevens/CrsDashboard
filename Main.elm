@@ -110,28 +110,28 @@ view model =
 loadCompany : Int -> Cmd Msg
 loadCompany accountId =
     Decode.list decodeCompany
-        |> Http.get ("lookupAccountDetails.do?accountId=" ++ toString accountId)
+        |> Http.get ("getCompany.do?accountId=" ++ toString accountId)
         |> Http.send LoadCompany
 
 
 loadClients : Int -> Cmd Msg
 loadClients accountId =
     Decode.list decodeClients
-        |> Http.get ("lookupAccountDetails.do?accountId=" ++ toString accountId)
+        |> Http.get ("getClients.do?accountId=" ++ toString accountId)
         |> Http.send LoadClients
 
 
 loadContents : Int -> Cmd Msg
 loadContents accountId =
     Decode.list decodeContents
-        |> Http.get ("lookupAccountDetails.do?accountId=" ++ toString accountId)
+        |> Http.get ("getContents.do?accountId=" ++ toString accountId)
         |> Http.send LoadContents
 
 
 loadProjects : Int -> Cmd Msg
 loadProjects accountId =
     Decode.list decodeProjects
-        |> Http.get ("lookupAccountDetails.do?accountId=" ++ toString accountId)
+        |> Http.get ("getProjects.do?accountId=" ++ toString accountId)
         |> Http.send LoadProjects
 
 
