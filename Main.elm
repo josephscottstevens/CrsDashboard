@@ -24,7 +24,12 @@ type alias Model =
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
-    ( { page = NotLoaded
+    ( { page = case Decode.decodeValue decodeCompany flags.allTheData.company of
+                Ok company ->
+                    AccountDetails (AccountDetails.emptyModel company)
+
+                Err str ->
+                    Error str
       , flags = flags
       }
     , Cmd.none
