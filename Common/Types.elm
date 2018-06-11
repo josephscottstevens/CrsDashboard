@@ -8,15 +8,6 @@ import Json.Decode.Pipeline as Pipeline
 type alias Flags =
     { displayLength : String
     , showExportBtnToggle : Bool
-    , allTheData : AllTheData
-    }
-
-
-type alias AllTheData =
-    { company : Decode.Value
-    , clients : Decode.Value
-    , contents : Decode.Value
-    , projects : Decode.Value
     }
 
 

@@ -10,27 +10,34 @@ import Common.Types exposing (..)
 import Html exposing (Html, a, br, button, div, h1, input, label, li, span, table, tbody, td, text, tr, ul)
 import Html.Attributes exposing (class, href, id, style, tabindex)
 import Html.Events exposing (onClick)
+import Http
 import Json.Decode as Decode
 
 
-port openPage : (String -> msg) -> Sub msg
+port showError : String -> Cmd msg
+
+
+port search : (Int -> msg) -> Sub msg
 
 
 type alias Model =
     { page : Page
     , flags : Flags
+    , company : Maybe Company
+    , clients : Maybe (List Clients)
+    , contents : Maybe (List Contents)
+    , projects : Maybe (List Projects)
     }
 
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
-    ( { page = case Decode.decodeValue decodeCompany flags.allTheData.company of
-                Ok company ->
-                    AccountDetails (AccountDetails.emptyModel company)
-
-                Err str ->
-                    Error str
+    ( { page = AccountDetails AccountDetails.emptyModel
       , flags = flags
+      , company = Nothing
+      , clients = Nothing
+      , contents = Nothing
+      , projects = Nothing
       }
     , Cmd.none
     )
@@ -39,7 +46,7 @@ init flags =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ openPage OpenPage
+        [ search Search
         , pageSubscriptions model.page
         ]
 
@@ -79,58 +86,6 @@ type Page
     | Error String
 
 
-getPage : Flags -> String -> Page
-getPage flags pageStr =
-    case pageStr of
-        "accountDetails" ->
-            case Decode.decodeValue decodeCompany flags.allTheData.company of
-                Ok company ->
-                    AccountDetails (AccountDetails.emptyModel company)
-
-                Err str ->
-                    Error str
-
-        "accountContacts" ->
-            case Decode.decodeValue (Decode.list decodeClients) flags.allTheData.clients of
-                Ok companies ->
-                    AccountContacts (AccountContacts.emptyModel flags companies)
-
-                Err str ->
-                    Error str
-
-        "accountContents" ->
-            case Decode.decodeValue (Decode.list decodeContents) flags.allTheData.contents of
-                Ok contents ->
-                    AccountContents (AccountContents.emptyModel flags contents)
-
-                Err str ->
-                    Error str
-
-        "accountEntitlements" ->
-            case Decode.decodeValue (Decode.list decodeContents) flags.allTheData.contents of
-                Ok contents ->
-                    case Decode.decodeValue (Decode.list decodeClients) flags.allTheData.clients of
-                        Ok clients ->
-                            AccountEntitlements (AccountEntitlements.emptyModel flags ( contents, clients ))
-
-                        Err str ->
-                            Error str
-
-                Err str ->
-                    Error str
-
-        "accountProjects" ->
-            case Decode.decodeValue (Decode.list decodeProjects) flags.allTheData.projects of
-                Ok projects ->
-                    AccountProjects (AccountProjects.emptyModel flags projects)
-
-                Err str ->
-                    Error str
-
-        _ ->
-            Error "Unknown Page"
-
-
 view : Model -> Html Msg
 view model =
     div [ class "showAccountDetails" ]
@@ -138,47 +93,105 @@ view model =
             [ tbody []
                 [ div [ id "account-tabs" ]
                     [ ul [ id "detailsTabList", role "tablist", class "ui-tabs-nav ui-corner-all ui-helper-reset ui-helper-clearfix ui-widget-header" ]
-                        (List.indexedMap (\idx t -> viewTab (getCurrentTab model.page) idx t) tabs)
+                        (List.indexedMap (\idx t -> viewTab model.page (getCurrentTab model.page) idx t) tabs)
                     , div
                         [ id ("#" ++ getTabContentId (getCurrentTab model.page) ++ "-fragment")
                         , style [ ( "font-family", "Arial" ), ( "font-size", "12px" ), ( "height", "100%" ), ( "overflow", "auto" ) ]
                         , class "ui-tabs-panel ui-corner-bottom ui-widget-content"
                         , ariaHidden False
                         ]
-                        [ viewPage model.page ]
+                        [ viewPage model ]
                     ]
                 ]
             ]
         ]
 
 
-viewPage : Page -> Html Msg
-viewPage page =
-    case page of
+loadCompany : Int -> Cmd Msg
+loadCompany accountId =
+    Decode.list decodeCompany
+        |> Http.get ("getCompany.do?accountId=" ++ toString accountId)
+        |> Http.send LoadCompany
+
+
+loadClients : Int -> Cmd Msg
+loadClients accountId =
+    Decode.list decodeClients
+        |> Http.get ("getClients.do?accountId=" ++ toString accountId)
+        |> Http.send LoadClients
+
+
+loadContents : Int -> Cmd Msg
+loadContents accountId =
+    Decode.list decodeContents
+        |> Http.get ("getContents.do?accountId=" ++ toString accountId)
+        |> Http.send LoadContents
+
+
+loadProjects : Int -> Cmd Msg
+loadProjects accountId =
+    Decode.list decodeProjects
+        |> Http.get ("getProjects.do?accountId=" ++ toString accountId)
+        |> Http.send LoadProjects
+
+
+viewPage : Model -> Html Msg
+viewPage model =
+    case model.page of
         NotLoaded ->
             text ""
 
         AccountDetails subModel ->
-            Html.map AccountDetailsMsg (AccountDetails.view subModel)
+            case model.company of
+                Just company ->
+                    Html.map AccountDetailsMsg (AccountDetails.view subModel company)
+
+                Nothing ->
+                    text ""
 
         AccountContacts subModel ->
-            Html.map AccountContactsMsg (AccountContacts.view subModel)
+            case model.clients of
+                Just clients ->
+                    Html.map AccountContactsMsg (AccountContacts.view subModel clients)
+
+                Nothing ->
+                    text ""
 
         AccountContents subModel ->
-            Html.map AccountContentsMsg (AccountContents.view subModel)
+            case model.contents of
+                Just contents ->
+                    Html.map AccountContentsMsg (AccountContents.view subModel contents)
+
+                Nothing ->
+                    text ""
 
         AccountEntitlements subModel ->
-            Html.map AccountEntitlementsMsg (AccountEntitlements.view subModel)
+            case ( model.contents, model.clients ) of
+                ( Just contents, Just clients ) ->
+                    Html.map AccountEntitlementsMsg (AccountEntitlements.view subModel contents clients)
+
+                _ ->
+                    text ""
 
         AccountProjects subModel ->
-            Html.map AccountProjectsMsg (AccountProjects.view subModel)
+            case model.projects of
+                Just projects ->
+                    Html.map AccountProjectsMsg (AccountProjects.view subModel projects)
+
+                Nothing ->
+                    text ""
 
         Error errorStr ->
             text errorStr
 
 
 type Msg
-    = OpenPage String
+    = OpenPage Page
+    | Search Int
+    | LoadCompany (Result Http.Error (List Company))
+    | LoadClients (Result Http.Error (List Clients))
+    | LoadContents (Result Http.Error (List Contents))
+    | LoadProjects (Result Http.Error (List Projects))
     | AccountDetailsMsg AccountDetails.Msg
     | AccountContactsMsg AccountContacts.Msg
     | AccountContentsMsg AccountContents.Msg
@@ -202,10 +215,55 @@ updatePage page msg model =
             { model | page = toModel newModel } ! [ Cmd.map toMsg newCmd ]
     in
     case ( msg, page ) of
-        ( OpenPage pageStr, _ ) ->
-            ( { model | page = getPage model.flags pageStr }
-            , Cmd.none
+        ( OpenPage page, _ ) ->
+            ( { model | page = page }, Cmd.none )
+
+        ( Search accountId, _ ) ->
+            ( model
+            , Cmd.batch
+                [ loadCompany accountId
+                , loadClients accountId
+                , loadContents accountId
+                , loadProjects accountId
+                ]
             )
+
+        ( LoadCompany response, _ ) ->
+            case response of
+                Ok companies ->
+                    case List.head companies of
+                        Just company ->
+                            ( { model | company = Just company }, Cmd.none )
+
+                        Nothing ->
+                            ( model, showError "There was an error getting details for the company." )
+
+                Err t ->
+                    ( model, showError (toString t) )
+
+        ( LoadClients response, _ ) ->
+            case response of
+                Ok clients ->
+                    ( { model | clients = Just clients }, Cmd.none )
+
+                Err t ->
+                    ( model, showError (toString t) )
+
+        ( LoadContents response, _ ) ->
+            case response of
+                Ok contents ->
+                    ( { model | contents = Just contents }, Cmd.none )
+
+                Err t ->
+                    ( model, showError (toString t) )
+
+        ( LoadProjects response, _ ) ->
+            case response of
+                Ok projects ->
+                    ( { model | projects = Just projects }, Cmd.none )
+
+                Err t ->
+                    ( model, showError (toString t) )
 
         ( AccountDetailsMsg subMsg, AccountDetails subModel ) ->
             toPage AccountDetails AccountDetailsMsg AccountDetails.update subMsg subModel
@@ -276,7 +334,9 @@ getTabContentId maybeTab =
 
 
 type alias Tab =
-    { name : String, displayText : String }
+    { name : String
+    , displayText : String
+    }
 
 
 accountDetailsTab : Tab
@@ -320,8 +380,8 @@ tabs =
     ]
 
 
-viewTab : Maybe Tab -> Int -> Tab -> Html Msg
-viewTab activeTab idx tab =
+viewTab : Page -> Maybe Tab -> Int -> Tab -> Html Msg
+viewTab page activeTab idx tab =
     let
         hrefText =
             tab.name ++ "-fragment"
@@ -361,7 +421,7 @@ viewTab activeTab idx tab =
         , ariaExpanded isActive
         , style closeDetailsStyle
         ]
-        [ a [ href ("#" ++ hrefText), tabindex -1, role "presentation", class "ui-tabs-anchor", id hrefId, onClick (OpenPage tab.name) ]
+        [ a [ href ("#" ++ hrefText), tabindex -1, role "presentation", class "ui-tabs-anchor", id hrefId, onClick (OpenPage page) ]
             [ span [] [ text tab.displayText ]
             ]
         ]

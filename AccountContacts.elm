@@ -14,8 +14,7 @@ subscriptions model =
 
 
 type alias Model =
-    { rows : List Clients
-    , tableState : Table.State
+    { tableState : Table.State
     , filterStr : String
     , showInactive : Bool
     }
@@ -41,11 +40,11 @@ searchHelper model row =
     String.contains searchText rowText
 
 
-view : Model -> Html Msg
-view model =
+view : Model -> List Clients -> Html Msg
+view model rows =
     let
         filteredClientss =
-            model.rows
+            rows
                 |> List.filter (inactiveHelper model)
                 |> List.filter (searchHelper model)
     in
@@ -124,15 +123,14 @@ gridConfig model =
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
-    ( emptyModel flags []
+    ( emptyModel flags
     , Cmd.none
     )
 
 
-emptyModel : Flags -> List Clients -> Model
-emptyModel flags rows =
-    { rows = rows
-    , tableState = Table.init "Year" flags.displayLength
+emptyModel : Flags -> Model
+emptyModel flags =
+    { tableState = Table.init "Year" flags.displayLength
     , filterStr = ""
     , showInactive = True
     }

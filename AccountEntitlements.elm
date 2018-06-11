@@ -20,17 +20,15 @@ subscriptions model =
 
 
 type alias Model =
-    { rows : List Contents
-    , clients : List Clients
-    , tableState : Table.State
+    { tableState : Table.State
     , filterStr : String
     , showInactive : Bool
     , showExportBtnToggle : Bool
     }
 
 
-view : Model -> Html Msg
-view model =
+view : Model -> List Contents -> List Clients -> Html Msg
+view model rows clients =
     let
         filteredRows =
             List.filter
@@ -40,10 +38,10 @@ view model =
                     else
                         t.contentActive
                 )
-                model.rows
+                rows
     in
     div []
-        [ Table.view model.tableState filteredRows (gridConfig model)
+        [ Table.view model.tableState filteredRows (gridConfig model rows clients)
         ]
 
 
@@ -166,28 +164,28 @@ contentHelper row =
         text row.contentKey
 
 
-excelExportData : Model -> List (List String)
-excelExportData model =
-    [ modelToHeader model ]
-        ++ List.map (\row -> rowToList model row) model.rows
+excelExportData : Model -> List Contents -> List Clients -> List (List String)
+excelExportData model rows clients =
+    [ modelToHeader model clients ]
+        ++ List.map (\row -> rowToList model row clients) rows
 
 
-modelToHeader : Model -> List String
-modelToHeader model =
-    [ "" ] ++ List.map (\client -> customerDataToString client) (List.filter (\t -> t.client_active) model.clients)
+modelToHeader : Model -> List Clients -> List String
+modelToHeader model clients =
+    [ "" ] ++ List.map (\client -> customerDataToString client) (List.filter (\t -> t.client_active) clients)
 
 
-rowToList : Model -> Contents -> List String
-rowToList model row =
+rowToList : Model -> Contents -> List Clients -> List String
+rowToList model row clients =
     [ row.contentKey
     ]
         ++ List.map
             (\customer -> rowHelper customer.code row)
-            (filterColumns model model.clients)
+            (filterColumns model clients)
 
 
-columns : Model -> List (Table.Column Contents Msg)
-columns model =
+columns : Model -> List Clients -> List (Table.Column Contents Msg)
+columns model clients =
     [ { header = text ""
       , viewData = contentHelper
       , columnStyle = CustomStyle [ ( "width", "1%" ), ( "border-right", "1px solid black" ) ]
@@ -204,7 +202,7 @@ columns model =
                 , columnId = formatClients customer
                 }
             )
-            (filterColumns model model.clients)
+            (filterColumns model clients)
 
 
 sortMaybeString : String -> String
@@ -215,8 +213,8 @@ sortMaybeString t =
         t
 
 
-gridConfig : Model -> Table.Config Contents Msg
-gridConfig model =
+gridConfig : Model -> List Contents -> List Clients -> Table.Config Contents Msg
+gridConfig model rows clients =
     { domTableId = "searchResultsTable"
     , toolbar =
         [ Table.viewPagination model.tableState SetTableState
@@ -232,7 +230,7 @@ gridConfig model =
         , div [ class "detailsEntitlementToolbarElementLeft" ]
             [ label [] [ text "" ]
             , if model.showExportBtnToggle then
-                button [ onClick (ExcelExport (excelExportData model)) ] [ text "Export To Excel" ]
+                button [ onClick (ExcelExport (excelExportData model rows clients)) ] [ text "Export To Excel" ]
               else
                 text ""
             ]
@@ -240,23 +238,21 @@ gridConfig model =
         --, pagingView state totalRows filteredRows config.toMsg
         ]
     , toMsg = SetTableState
-    , columns = columns model
+    , columns = columns model clients
     , toRowId = .contentId
     }
 
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
-    ( emptyModel flags ( [], [] )
+    ( emptyModel flags
     , Cmd.none
     )
 
 
-emptyModel : Flags -> ( List Contents, List Clients ) -> Model
-emptyModel flags ( rows, clients ) =
-    { rows = rows
-    , clients = clients
-    , tableState = Table.init "Year" flags.displayLength
+emptyModel : Flags -> Model
+emptyModel flags =
+    { tableState = Table.init "Year" flags.displayLength
     , filterStr = ""
     , showInactive = False
     , showExportBtnToggle = flags.showExportBtnToggle

@@ -14,7 +14,7 @@ subscriptions model =
 
 
 type alias Model =
-    { accountDetails : Company
+    { str : String
     }
 
 
@@ -39,29 +39,23 @@ trRow labelText valueText =
         ]
 
 
-view : Model -> Html Msg
-view model =
-    let
-        accountDetails =
-            model.accountDetails
-    in
-        table
-            [ cellpadding "0"
-            , cellspacing "0"
-            , border "0"
-            , class "display datatableHighlight"
-            , id "accountDetailsTable"
-            ]
-            [ tbody []
-                [ tr []
-                    [ td [ style [ ( "font-weight", "bold" ), ( "font-size", "22px" ), ( "padding-bottom", "1%" ), ( "color", "#565353" ) ] ]
-                        [ text accountDetails.company
-                        , span [ style [ ( "padding-left", "1%" ), ( "font-weight", "normal" ), ( "font-size", "12px" ), ( "color", "black" ) ] ]
-                            [ text "( "
-                            , span [ style [ ( "font-weight", "bold" ), ( "color", "green" ), ( "font-size", "13px" ) ] ]
-                                [ text "Active"
-                                ]
-                            , text " )"
+view : Model -> Company -> Html Msg
+view model accountDetails =
+    table
+        [ cellpadding "0"
+        , cellspacing "0"
+        , border "0"
+        , class "display datatableHighlight"
+        , id "accountDetailsTable"
+        ]
+        [ tbody []
+            [ tr []
+                [ td [ style [ ( "font-weight", "bold" ), ( "font-size", "22px" ), ( "padding-bottom", "1%" ), ( "color", "#565353" ) ] ]
+                    [ text accountDetails.company
+                    , span [ style [ ( "padding-left", "1%" ), ( "font-weight", "normal" ), ( "font-size", "12px" ), ( "color", "black" ) ] ]
+                        [ text "( "
+                        , span [ style [ ( "font-weight", "bold" ), ( "color", "green" ), ( "font-size", "13px" ) ] ]
+                            [ text "Active"
                             ]
                         ]
                     ]
@@ -95,14 +89,14 @@ update msg model =
             )
 
 
-init : Company -> ( Model, Cmd Msg )
-init accountDetails =
-    ( emptyModel accountDetails
+init : ( Model, Cmd Msg )
+init =
+    ( emptyModel
     , Cmd.none
     )
 
 
-emptyModel : Company -> Model
-emptyModel accountDetails =
-    { accountDetails = accountDetails
+emptyModel : Model
+emptyModel =
+    { str = ""
     }
