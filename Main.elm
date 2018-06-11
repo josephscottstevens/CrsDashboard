@@ -110,28 +110,28 @@ view model =
 loadCompany : Int -> Cmd Msg
 loadCompany accountId =
     Decode.list decodeCompany
-        |> Http.get ("getCompany.do?accountId=" ++ toString accountId)
+        |> Http.get ("lookupAccountDetails.do?accountId=" ++ toString accountId)
         |> Http.send LoadCompany
 
 
 loadClients : Int -> Cmd Msg
 loadClients accountId =
     Decode.list decodeClients
-        |> Http.get ("getClients.do?accountId=" ++ toString accountId)
+        |> Http.get ("lookupAccountContacts.do?accountId=" ++ toString accountId)
         |> Http.send LoadClients
 
 
 loadContents : Int -> Cmd Msg
 loadContents accountId =
     Decode.list decodeContents
-        |> Http.get ("getContents.do?accountId=" ++ toString accountId)
+        |> Http.get ("lookupAccountContents.do?accountId=" ++ toString accountId)
         |> Http.send LoadContents
 
 
 loadProjects : Int -> Cmd Msg
 loadProjects accountId =
     Decode.list decodeProjects
-        |> Http.get ("getProjects.do?accountId=" ++ toString accountId)
+        |> Http.get ("lookupAccountProjects.do?accountId=" ++ toString accountId)
         |> Http.send LoadProjects
 
 
@@ -212,76 +212,76 @@ updatePage page msg model =
                 ( newModel, newCmd ) =
                     subUpdate subMsg subModel
             in
-            { model | page = toModel newModel } ! [ Cmd.map toMsg newCmd ]
+                { model | page = toModel newModel } ! [ Cmd.map toMsg newCmd ]
     in
-    case ( msg, page ) of
-        ( OpenPage page, _ ) ->
-            ( { model | page = page }, Cmd.none )
+        case ( msg, page ) of
+            ( OpenPage page, _ ) ->
+                ( { model | page = page }, Cmd.none )
 
-        ( Search accountId, _ ) ->
-            ( model
-            , Cmd.batch
-                [ loadCompany accountId
-                , loadClients accountId
-                , loadContents accountId
-                , loadProjects accountId
-                ]
-            )
+            ( Search accountId, _ ) ->
+                ( model
+                , Cmd.batch
+                    [ loadCompany accountId
+                    , loadClients accountId
+                    , loadContents accountId
+                    , loadProjects accountId
+                    ]
+                )
 
-        ( LoadCompany response, _ ) ->
-            case response of
-                Ok companies ->
-                    case List.head companies of
-                        Just company ->
-                            ( { model | company = Just company }, Cmd.none )
+            ( LoadCompany response, _ ) ->
+                case response of
+                    Ok companies ->
+                        case List.head companies of
+                            Just company ->
+                                ( { model | company = Just company }, Cmd.none )
 
-                        Nothing ->
-                            ( model, showError "There was an error getting details for the company." )
+                            Nothing ->
+                                ( model, showError "There was an error getting details for the company." )
 
-                Err t ->
-                    ( model, showError (toString t) )
+                    Err t ->
+                        ( model, showError (toString t) )
 
-        ( LoadClients response, _ ) ->
-            case response of
-                Ok clients ->
-                    ( { model | clients = Just clients }, Cmd.none )
+            ( LoadClients response, _ ) ->
+                case response of
+                    Ok clients ->
+                        ( { model | clients = Just clients }, Cmd.none )
 
-                Err t ->
-                    ( model, showError (toString t) )
+                    Err t ->
+                        ( model, showError (toString t) )
 
-        ( LoadContents response, _ ) ->
-            case response of
-                Ok contents ->
-                    ( { model | contents = Just contents }, Cmd.none )
+            ( LoadContents response, _ ) ->
+                case response of
+                    Ok contents ->
+                        ( { model | contents = Just contents }, Cmd.none )
 
-                Err t ->
-                    ( model, showError (toString t) )
+                    Err t ->
+                        ( model, showError (toString t) )
 
-        ( LoadProjects response, _ ) ->
-            case response of
-                Ok projects ->
-                    ( { model | projects = Just projects }, Cmd.none )
+            ( LoadProjects response, _ ) ->
+                case response of
+                    Ok projects ->
+                        ( { model | projects = Just projects }, Cmd.none )
 
-                Err t ->
-                    ( model, showError (toString t) )
+                    Err t ->
+                        ( model, showError (toString t) )
 
-        ( AccountDetailsMsg subMsg, AccountDetails subModel ) ->
-            toPage AccountDetails AccountDetailsMsg AccountDetails.update subMsg subModel
+            ( AccountDetailsMsg subMsg, AccountDetails subModel ) ->
+                toPage AccountDetails AccountDetailsMsg AccountDetails.update subMsg subModel
 
-        ( AccountContactsMsg subMsg, AccountContacts subModel ) ->
-            toPage AccountContacts AccountContactsMsg AccountContacts.update subMsg subModel
+            ( AccountContactsMsg subMsg, AccountContacts subModel ) ->
+                toPage AccountContacts AccountContactsMsg AccountContacts.update subMsg subModel
 
-        ( AccountContentsMsg subMsg, AccountContents subModel ) ->
-            toPage AccountContents AccountContentsMsg AccountContents.update subMsg subModel
+            ( AccountContentsMsg subMsg, AccountContents subModel ) ->
+                toPage AccountContents AccountContentsMsg AccountContents.update subMsg subModel
 
-        ( AccountEntitlementsMsg subMsg, AccountEntitlements subModel ) ->
-            toPage AccountEntitlements AccountEntitlementsMsg AccountEntitlements.update subMsg subModel
+            ( AccountEntitlementsMsg subMsg, AccountEntitlements subModel ) ->
+                toPage AccountEntitlements AccountEntitlementsMsg AccountEntitlements.update subMsg subModel
 
-        ( AccountProjectsMsg subMsg, AccountProjects subModel ) ->
-            toPage AccountProjects AccountProjectsMsg AccountProjects.update subMsg subModel
+            ( AccountProjectsMsg subMsg, AccountProjects subModel ) ->
+                toPage AccountProjects AccountProjectsMsg AccountProjects.update subMsg subModel
 
-        _ ->
-            ( model, Cmd.none )
+            _ ->
+                ( model, Cmd.none )
 
 
 main : Program Flags Model Msg
@@ -410,21 +410,21 @@ viewTab page activeTab idx tab =
             else
                 ""
     in
-    li
-        [ id idStr
-        , role "tab"
-        , tabindex 0
-        , class ("ui-tabs-tab ui-corner-top ui-state-default ui-tab " ++ activeClass)
-        , ariaControls hrefText
-        , ariaLabelledby hrefId
-        , ariaSelected isActive
-        , ariaExpanded isActive
-        , style closeDetailsStyle
-        ]
-        [ a [ href ("#" ++ hrefText), tabindex -1, role "presentation", class "ui-tabs-anchor", id hrefId, onClick (OpenPage page) ]
-            [ span [] [ text tab.displayText ]
+        li
+            [ id idStr
+            , role "tab"
+            , tabindex 0
+            , class ("ui-tabs-tab ui-corner-top ui-state-default ui-tab " ++ activeClass)
+            , ariaControls hrefText
+            , ariaLabelledby hrefId
+            , ariaSelected isActive
+            , ariaExpanded isActive
+            , style closeDetailsStyle
             ]
-        ]
+            [ a [ href ("#" ++ hrefText), tabindex -1, role "presentation", class "ui-tabs-anchor", id hrefId, onClick (OpenPage page) ]
+                [ span [] [ text tab.displayText ]
+                ]
+            ]
 
 
 

@@ -74,6 +74,7 @@ view model accountDetails =
                     ]
                 ]
             ]
+        ]
 
 
 type Msg
