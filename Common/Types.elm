@@ -29,7 +29,7 @@ type alias Company =
     , subscription : String
     , vote : String
     , totalPayments : Int
-    , activeProductsPurchased : List String
+    , activeProductsPurchased : String
     }
 
 
@@ -80,7 +80,7 @@ decodeCompany =
         |> Pipeline.required "Customer_Class__c" decodeString
         |> Pipeline.required "Vote_Schedule__c" decodeString
         |> Pipeline.required "Annual_Billed__C" Decode.int
-        |> Pipeline.required "Active_Licensed_Products__c" (Decode.list decodeString)
+        |> Pipeline.required "Active_Licensed_Products__c" decodeString
 
 
 decodeClients : Decode.Decoder Clients

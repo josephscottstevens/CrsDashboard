@@ -45,41 +45,41 @@ view model =
         accountDetails =
             model.accountDetails
     in
-    table
-        [ cellpadding "0"
-        , cellspacing "0"
-        , border "0"
-        , class "display datatableHighlight"
-        , id "accountDetailsTable"
-        ]
-        [ tbody []
-            [ tr []
-                [ td [ style [ ( "font-weight", "bold" ), ( "font-size", "22px" ), ( "padding-bottom", "1%" ), ( "color", "#565353" ) ] ]
-                    [ text accountDetails.company
-                    , span [ style [ ( "padding-left", "1%" ), ( "font-weight", "normal" ), ( "font-size", "12px" ), ( "color", "black" ) ] ]
-                        [ text "( "
-                        , span [ style [ ( "font-weight", "bold" ), ( "color", "green" ), ( "font-size", "13px" ) ] ]
-                            [ text "Active"
+        table
+            [ cellpadding "0"
+            , cellspacing "0"
+            , border "0"
+            , class "display datatableHighlight"
+            , id "accountDetailsTable"
+            ]
+            [ tbody []
+                [ tr []
+                    [ td [ style [ ( "font-weight", "bold" ), ( "font-size", "22px" ), ( "padding-bottom", "1%" ), ( "color", "#565353" ) ] ]
+                        [ text accountDetails.company
+                        , span [ style [ ( "padding-left", "1%" ), ( "font-weight", "normal" ), ( "font-size", "12px" ), ( "color", "black" ) ] ]
+                            [ text "( "
+                            , span [ style [ ( "font-weight", "bold" ), ( "color", "green" ), ( "font-size", "13px" ) ] ]
+                                [ text "Active"
+                                ]
+                            , text " )"
                             ]
-                        , text " )"
                         ]
                     ]
-                ]
-            , trRow "Account Id" (toString accountDetails.company_id)
-            , trRow "Status" accountDetails.status
-            , trRow "Sales Rep" accountDetails.salesperson
-            , trRow "Type" accountDetails.type_
-            , trRow "Subscription" accountDetails.subscription
-            , trRow "Vote" accountDetails.vote
-            , trRow "Total Payment" ("$" ++ toString accountDetails.totalPayments)
-            , tr []
-                [ td [ tdStyle ] [ text "Active Products Purchased" ]
-                ]
-            , tr []
-                [ td [ tdStyle ] [ text (String.join "," accountDetails.activeProductsPurchased) ]
+                , trRow "Account Id" (toString accountDetails.company_id)
+                , trRow "Status" accountDetails.status
+                , trRow "Sales Rep" accountDetails.salesperson
+                , trRow "Type" accountDetails.type_
+                , trRow "Subscription" accountDetails.subscription
+                , trRow "Vote" accountDetails.vote
+                , trRow "Total Payment" ("$" ++ toString accountDetails.totalPayments)
+                , tr []
+                    [ td [ tdStyle ] [ text "Active Products Purchased" ]
+                    ]
+                , tr []
+                    [ td [ tdStyle ] [ text accountDetails.activeProductsPurchased ]
+                    ]
                 ]
             ]
-        ]
 
 
 type Msg
