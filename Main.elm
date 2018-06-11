@@ -111,32 +111,28 @@ view model =
 loadCompany : Int -> Cmd Msg
 loadCompany accountId =
     Decode.list decodeCompany
-        |> Http.post "lookupAccountDetails.do"
-            (Http.jsonBody (Encode.object [ ( "accountId", Encode.int accountId ) ]))
+        |> Http.post ("lookupAccountDetails.do?accountId=" ++ toString accountId) Http.emptyBody
         |> Http.send LoadCompany
 
 
 loadClients : Int -> Cmd Msg
 loadClients accountId =
     Decode.list decodeClients
-        |> Http.post "lookupAccountContacts.do"
-            (Http.jsonBody (Encode.object [ ( "accountId", Encode.int accountId ) ]))
+        |> Http.post ("lookupAccountContacts.do?accountId=" ++ toString accountId) Http.emptyBody
         |> Http.send LoadClients
 
 
 loadContents : Int -> Cmd Msg
 loadContents accountId =
     Decode.list decodeContents
-        |> Http.post "lookupAccountContents.do"
-            (Http.jsonBody (Encode.object [ ( "accountId", Encode.int accountId ) ]))
+        |> Http.post ("lookupAccountContents.do?accountId=" ++ toString accountId) Http.emptyBody
         |> Http.send LoadContents
 
 
 loadProjects : Int -> Cmd Msg
 loadProjects accountId =
     Decode.list decodeProjects
-        |> Http.post "lookupAccountProjects.do"
-            (Http.jsonBody (Encode.object [ ( "accountId", Encode.int accountId ) ]))
+        |> Http.post ("lookupAccountProjects.do?accountId=" ++ toString accountId) Http.emptyBody
         |> Http.send LoadProjects
 
 
