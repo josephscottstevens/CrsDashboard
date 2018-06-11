@@ -14,7 +14,7 @@ subscriptions model =
 
 
 type alias Model =
-    { accountDetails : Company
+    { str : String
     }
 
 
@@ -39,12 +39,8 @@ trRow labelText valueText =
         ]
 
 
-view : Model -> Html Msg
-view model =
-    let
-        accountDetails =
-            model.accountDetails
-    in
+view : Model -> Company -> Html Msg
+view model accountDetails =
     table
         [ cellpadding "0"
         , cellspacing "0"
@@ -95,14 +91,14 @@ update msg model =
             )
 
 
-init : Company -> ( Model, Cmd Msg )
-init accountDetails =
-    ( emptyModel accountDetails
+init : ( Model, Cmd Msg )
+init =
+    ( emptyModel
     , Cmd.none
     )
 
 
-emptyModel : Company -> Model
-emptyModel accountDetails =
-    { accountDetails = accountDetails
+emptyModel : Model
+emptyModel =
+    { str = ""
     }
