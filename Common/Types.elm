@@ -62,8 +62,8 @@ type alias Projects =
     }
 
 
-decodeCompany : Decode.Decoder Company
-decodeCompany =
+decodeCompanyListItem : Decode.Decoder Company
+decodeCompanyListItem =
     Pipeline.decode Company
         |> Pipeline.required "company" decodeString
         |> Pipeline.required "company_id" Decode.int
@@ -76,8 +76,18 @@ decodeCompany =
         |> Pipeline.required "Active_Licensed_Products__c" decodeString
 
 
-decodeClients : Decode.Decoder Clients
-decodeClients =
+decodeCompanyList : Decode.Decoder (List Company)
+decodeCompanyList =
+    Decode.list decodeCompanyListItem
+
+
+decodeCompany : Decode.Decoder (List Company)
+decodeCompany =
+    Decode.field "company" decodeCompanyList
+
+
+decodeClientsListItem : Decode.Decoder Clients
+decodeClientsListItem =
     Pipeline.decode Clients
         |> Pipeline.required "id" Decode.int
         |> Pipeline.required "code" decodeString
@@ -88,8 +98,18 @@ decodeClients =
         |> Pipeline.required "status" decodeString
 
 
-decodeContents : Decode.Decoder Contents
-decodeContents =
+decodeClientsList : Decode.Decoder (List Clients)
+decodeClientsList =
+    Decode.list decodeClientsListItem
+
+
+decodeClients : Decode.Decoder (List Clients)
+decodeClients =
+    Decode.field "clients" decodeClientsList
+
+
+decodeContentsListItem : Decode.Decoder Contents
+decodeContentsListItem =
     Pipeline.decode Contents
         |> Pipeline.required "contentId" Decode.int
         |> Pipeline.required "contentKey" decodeString
@@ -103,8 +123,18 @@ decodeContents =
         |> Pipeline.required "contentTypeId" Decode.int
 
 
-decodeProjects : Decode.Decoder Projects
-decodeProjects =
+decodeContentsList : Decode.Decoder (List Contents)
+decodeContentsList =
+    Decode.list decodeContentsListItem
+
+
+decodeContents : Decode.Decoder (List Contents)
+decodeContents =
+    Decode.field "contents" decodeContentsList
+
+
+decodeProjectsListItem : Decode.Decoder Projects
+decodeProjectsListItem =
     Pipeline.decode Projects
         |> Pipeline.required "id" Decode.int
         |> Pipeline.required "proj_num" Decode.int
@@ -113,3 +143,13 @@ decodeProjects =
         |> Pipeline.required "first_name" decodeString
         |> Pipeline.required "last_name" decodeString
         |> Pipeline.required "proj_desc" decodeString
+
+
+decodeProjectsList : Decode.Decoder (List Projects)
+decodeProjectsList =
+    Decode.list decodeProjectsListItem
+
+
+decodeProjects : Decode.Decoder (List Projects)
+decodeProjects =
+    Decode.field "projects" decodeProjectsList

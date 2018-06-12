@@ -198,13 +198,13 @@ updatePage page msg model =
         ( Search accountId, _ ) ->
             ( model
             , Cmd.batch
-                [ postRequest ("lookupAccountDetails.do?accountId=" ++ accountId) (Decode.list decodeCompany)
+                [ postRequest ("lookupAccountDetails.do?accountId=" ++ accountId) decodeCompany
                     |> Http.send LoadCompany
-                , postRequest ("lookupAccountContacts.do?accountId=" ++ accountId) (Decode.list decodeClients)
+                , postRequest ("lookupAccountContacts.do?accountId=" ++ accountId) decodeClients
                     |> Http.send LoadClients
-                , postRequest ("lookupAccountContents.do?accountId=" ++ accountId) (Decode.list decodeContents)
+                , postRequest ("lookupAccountContents.do?accountId=" ++ accountId) decodeContents
                     |> Http.send LoadContents
-                , postRequest ("lookupAccountProjects.do?accountId=" ++ accountId) (Decode.list decodeProjects)
+                , postRequest ("lookupAccountProjects.do?accountId=" ++ accountId) decodeProjects
                     |> Http.send LoadProjects
                 ]
             )
