@@ -5,6 +5,7 @@ import AccountContents exposing (Model, emptyModel, init, subscriptions, update,
 import AccountDetails exposing (Model, emptyModel, init, subscriptions, update, view)
 import AccountEntitlements exposing (Model, emptyModel, init, subscriptions, update, view)
 import AccountProjects exposing (Model, emptyModel, init, subscriptions, update, view)
+import Common.Functions exposing (..)
 import Common.Html exposing (ariaControls, ariaExpanded, ariaHidden, ariaLabelledby, ariaSelected, role)
 import Common.Types exposing (..)
 import Html exposing (Html, a, br, button, div, h1, input, label, li, span, table, tbody, td, text, tr, ul)
@@ -108,31 +109,31 @@ view model =
         ]
 
 
-loadCompany : Int -> Cmd Msg
-loadCompany accountId =
+loadCompany : Flags -> Int -> Cmd Msg
+loadCompany flags accountId =
     Decode.list decodeCompany
-        |> Http.post ("lookupAccountDetails.do?accountId=" ++ toString accountId) Http.emptyBody
+        |> postRequest flags ("lookupAccountDetails.do?accountId=" ++ toString accountId)
         |> Http.send LoadCompany
 
 
-loadClients : Int -> Cmd Msg
-loadClients accountId =
+loadClients : Flags -> Int -> Cmd Msg
+loadClients flags accountId =
     Decode.list decodeClients
-        |> Http.post ("lookupAccountContacts.do?accountId=" ++ toString accountId) Http.emptyBody
+        |> postRequest flags ("lookupAccountContacts.do?accountId=" ++ toString accountId)
         |> Http.send LoadClients
 
 
-loadContents : Int -> Cmd Msg
-loadContents accountId =
+loadContents : Flags -> Int -> Cmd Msg
+loadContents flags accountId =
     Decode.list decodeContents
-        |> Http.post ("lookupAccountContents.do?accountId=" ++ toString accountId) Http.emptyBody
+        |> postRequest flags ("lookupAccountContents.do?accountId=" ++ toString accountId)
         |> Http.send LoadContents
 
 
-loadProjects : Int -> Cmd Msg
-loadProjects accountId =
+loadProjects : Flags -> Int -> Cmd Msg
+loadProjects flags accountId =
     Decode.list decodeProjects
-        |> Http.post ("lookupAccountProjects.do?accountId=" ++ toString accountId) Http.emptyBody
+        |> postRequest flags ("lookupAccountProjects.do?accountId=" ++ toString accountId)
         |> Http.send LoadProjects
 
 
@@ -222,10 +223,10 @@ updatePage page msg model =
         ( Search accountId, _ ) ->
             ( model
             , Cmd.batch
-                [ loadCompany accountId
-                , loadClients accountId
-                , loadContents accountId
-                , loadProjects accountId
+                [ loadCompany model.flags accountId
+                , loadClients model.flags accountId
+                , loadContents model.flags accountId
+                , loadProjects model.flags accountId
                 ]
             )
 
@@ -432,3 +433,16 @@ viewTab page activeTab idx tab =
 -- todo
 -- onclick="closeDetails()"
 -- aria tags
+
+
+postRequest : Flags -> String -> Decode.Decoder a -> Http.Request a
+postRequest flags url decoder =
+    Http.request
+        { body = Http.emptyBody
+        , expect = Http.expectJson decoder
+        , headers = [ Http.header flags.header flags.token ]
+        , method = "POST"
+        , timeout = Nothing
+        , url = url
+        , withCredentials = False
+        }

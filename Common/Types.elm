@@ -8,6 +8,8 @@ import Json.Decode.Pipeline as Pipeline
 type alias Flags =
     { displayLength : String
     , showExportBtnToggle : Bool
+    , header : String
+    , token : String
     }
 
 

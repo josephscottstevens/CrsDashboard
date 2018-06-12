@@ -1,9 +1,13 @@
 port module Common.Functions exposing (..)
 
+--import Common.Types exposing (Flags)
+
 import Date
 import Date.Extra
 import Dict exposing (Dict)
+import Http
 import Json.Decode as Decode
+import Json.Encode as Encode
 
 
 port openItem : String -> Cmd msg
@@ -210,3 +214,17 @@ decodeYnBool : Decode.Decoder Bool
 decodeYnBool =
     Decode.string
         |> Decode.andThen decodeYnBoolHelp
+
+
+
+-- postRequestCustom : Flags -> Encode.Value -> String -> Decode.Decoder a -> Http.Request a
+-- postRequestCustom flags body url decoder =
+--     Http.request
+--         { body = body |> Http.jsonBody
+--         , expect = Http.expectJson decoder
+--         , headers = [ Http.header flags.header flags.token ]
+--         , method = "POST"
+--         , timeout = Nothing
+--         , url = url
+--         , withCredentials = False
+--         }
