@@ -13,13 +13,12 @@ import Html.Attributes exposing (class, href, id, style, tabindex)
 import Html.Events exposing (onClick)
 import Http
 import Json.Decode as Decode
-import Json.Encode as Encode
 
 
 port showError : String -> Cmd msg
 
 
-port search : (Int -> msg) -> Sub msg
+port search : (String -> msg) -> Sub msg
 
 
 type alias Model =
@@ -161,7 +160,7 @@ viewPage model =
 
 type Msg
     = OpenPage Page
-    | Search Int
+    | Search String
     | LoadCompany (Result Http.Error (List Company))
     | LoadClients (Result Http.Error (List Clients))
     | LoadContents (Result Http.Error (List Contents))
@@ -199,14 +198,14 @@ updatePage page msg model =
         ( Search accountId, _ ) ->
             ( model
             , Cmd.batch
-                [ Http.send LoadCompany <|
-                    postRequest ("lookupAccountDetails.do?accountId=" ++ toString accountId) (Decode.list decodeCompany)
-                , Http.send LoadClients <|
-                    postRequest ("lookupAccountContacts.do?accountId=" ++ toString accountId) (Decode.list decodeClients)
-                , Http.send LoadContents <|
-                    postRequest ("lookupAccountContents.do?accountId=" ++ toString accountId) (Decode.list decodeContents)
-                , Http.send LoadProjects <|
-                    postRequest ("lookupAccountProjects.do?accountId=" ++ toString accountId) (Decode.list decodeProjects)
+                [ postRequest ("lookupAccountDetails.do?accountId=" ++ accountId) (Decode.list decodeCompany)
+                    |> Http.send LoadCompany
+                , postRequest ("lookupAccountContacts.do?accountId=" ++ accountId) (Decode.list decodeClients)
+                    |> Http.send LoadClients
+                , postRequest ("lookupAccountContents.do?accountId=" ++ accountId) (Decode.list decodeContents)
+                    |> Http.send LoadContents
+                , postRequest ("lookupAccountProjects.do?accountId=" ++ accountId) (Decode.list decodeProjects)
+                    |> Http.send LoadProjects
                 ]
             )
 
