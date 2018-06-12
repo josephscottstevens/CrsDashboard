@@ -109,34 +109,6 @@ view model =
         ]
 
 
-loadCompany : Flags -> Int -> Cmd Msg
-loadCompany flags accountId =
-    Decode.list decodeCompany
-        |> postRequest flags ("lookupAccountDetails.do?accountId=" ++ toString accountId)
-        |> Http.send LoadCompany
-
-
-loadClients : Flags -> Int -> Cmd Msg
-loadClients flags accountId =
-    Decode.list decodeClients
-        |> postRequest flags ("lookupAccountContacts.do?accountId=" ++ toString accountId)
-        |> Http.send LoadClients
-
-
-loadContents : Flags -> Int -> Cmd Msg
-loadContents flags accountId =
-    Decode.list decodeContents
-        |> postRequest flags ("lookupAccountContents.do?accountId=" ++ toString accountId)
-        |> Http.send LoadContents
-
-
-loadProjects : Flags -> Int -> Cmd Msg
-loadProjects flags accountId =
-    Decode.list decodeProjects
-        |> postRequest flags ("lookupAccountProjects.do?accountId=" ++ toString accountId)
-        |> Http.send LoadProjects
-
-
 viewPage : Model -> Html Msg
 viewPage model =
     case model.page of
@@ -209,6 +181,10 @@ update msg model =
 updatePage : Page -> Msg -> Model -> ( Model, Cmd Msg )
 updatePage page msg model =
     let
+        postRequest : String -> Decode.Decoder a -> Http.Request a
+        postRequest =
+            postRequestWithFlags model.flags
+
         toPage toModel toMsg subUpdate subMsg subModel =
             let
                 ( newModel, newCmd ) =
@@ -223,10 +199,14 @@ updatePage page msg model =
         ( Search accountId, _ ) ->
             ( model
             , Cmd.batch
-                [ loadCompany model.flags accountId
-                , loadClients model.flags accountId
-                , loadContents model.flags accountId
-                , loadProjects model.flags accountId
+                [ Http.send LoadCompany <|
+                    postRequest ("lookupAccountDetails.do?accountId=" ++ toString accountId) (Decode.list decodeCompany)
+                , Http.send LoadClients <|
+                    postRequest ("lookupAccountContacts.do?accountId=" ++ toString accountId) (Decode.list decodeClients)
+                , Http.send LoadContents <|
+                    postRequest ("lookupAccountContents.do?accountId=" ++ toString accountId) (Decode.list decodeContents)
+                , Http.send LoadProjects <|
+                    postRequest ("lookupAccountProjects.do?accountId=" ++ toString accountId) (Decode.list decodeProjects)
                 ]
             )
 
@@ -429,14 +409,8 @@ viewTab page activeTab idx tab =
         ]
 
 
-
--- todo
--- onclick="closeDetails()"
--- aria tags
-
-
-postRequest : Flags -> String -> Decode.Decoder a -> Http.Request a
-postRequest flags url decoder =
+postRequestWithFlags : Flags -> String -> Decode.Decoder a -> Http.Request a
+postRequestWithFlags flags url decoder =
     Http.request
         { body = Http.emptyBody
         , expect = Http.expectJson decoder
@@ -446,3 +420,9 @@ postRequest flags url decoder =
         , url = url
         , withCredentials = False
         }
+
+
+
+-- todo
+-- onclick="closeDetails()"
+-- aria tags
