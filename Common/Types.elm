@@ -117,7 +117,7 @@ decodeContentsListItem =
         |> Pipeline.required "customerCode" (Decode.list decodeString)
         |> Pipeline.required "defaultFormat" decodeString
         |> Pipeline.required "methodDesc" (Decode.list decodeString)
-        |> Pipeline.required "relationshipType" (Decode.list decodeString)
+        |> Pipeline.required "type" (Decode.list decodeString)
         |> Pipeline.required "schedule" decodeString
         |> Pipeline.required "contentActive" decodeYnBool
         |> Pipeline.required "contentTypeId" Decode.int
