@@ -94,7 +94,7 @@ view model =
             [ tbody []
                 [ div [ id "account-tabs" ]
                     [ ul [ id "detailsTabList", role "tablist", class "ui-tabs-nav ui-corner-all ui-helper-reset ui-helper-clearfix ui-widget-header" ]
-                        (List.indexedMap (\idx t -> viewTab model.page (getCurrentTab model.page) idx t) tabs)
+                        (List.indexedMap (\idx t -> viewTab (getCurrentTab model.page) idx t) tabs)
                     , div
                         [ id ("#" ++ getTabContentId (getCurrentTab model.page) ++ "-fragment")
                         , style [ ( "font-family", "Arial" ), ( "font-size", "12px" ), ( "height", "100%" ), ( "overflow", "auto" ) ]
@@ -159,7 +159,7 @@ viewPage model =
 
 
 type Msg
-    = OpenPage Page
+    = OpenPage String
     | Search String
     | LoadCompany (Result Http.Error (List Company))
     | LoadClients (Result Http.Error (List Clients))
@@ -192,8 +192,8 @@ updatePage page msg model =
             { model | page = toModel newModel } ! [ Cmd.map toMsg newCmd ]
     in
     case ( msg, page ) of
-        ( OpenPage page, _ ) ->
-            ( { model | page = page }, Cmd.none )
+        ( OpenPage pageStr, _ ) ->
+            ( { model | page = getPage model.flags pageStr }, Cmd.none )
 
         ( Search accountId, _ ) ->
             ( model
@@ -320,6 +320,28 @@ type alias Tab =
     }
 
 
+getPage : Flags -> String -> Page
+getPage flags str =
+    case str of
+        "accountDetails" ->
+            AccountDetails AccountDetails.emptyModel
+
+        "accountContacts" ->
+            AccountContacts (AccountContacts.emptyModel flags)
+
+        "accountContents" ->
+            AccountContents (AccountContents.emptyModel flags)
+
+        "accountEntitlements" ->
+            AccountEntitlements (AccountEntitlements.emptyModel flags)
+
+        "accountProjects" ->
+            AccountProjects (AccountProjects.emptyModel flags)
+
+        _ ->
+            Error ("Unknown page: " ++ str)
+
+
 accountDetailsTab : Tab
 accountDetailsTab =
     Tab "accountDetails" "Account Details"
@@ -361,8 +383,8 @@ tabs =
     ]
 
 
-viewTab : Page -> Maybe Tab -> Int -> Tab -> Html Msg
-viewTab page activeTab idx tab =
+viewTab : Maybe Tab -> Int -> Tab -> Html Msg
+viewTab activeTab idx tab =
     let
         hrefText =
             tab.name ++ "-fragment"
@@ -402,7 +424,14 @@ viewTab page activeTab idx tab =
         , ariaExpanded isActive
         , style closeDetailsStyle
         ]
-        [ a [ href ("#" ++ hrefText), tabindex -1, role "presentation", class "ui-tabs-anchor", id hrefId, onClick (OpenPage page) ]
+        [ a
+            [ href ("#" ++ hrefText)
+            , tabindex -1
+            , role "presentation"
+            , class "ui-tabs-anchor"
+            , id hrefId
+            , onClick (OpenPage tab.name)
+            ]
             [ span [] [ text tab.displayText ]
             ]
         ]
