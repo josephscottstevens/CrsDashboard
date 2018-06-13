@@ -276,7 +276,7 @@ view state rows config =
             , id config.domTableId
             , style [ ( "width", "100%" ) ]
             ]
-            [ thead []
+            [ thead [ id (config.domTableId ++ "Header") ]
                 [ tr [] (List.map (viewTh state config) config.columns)
                 ]
             , tbody []
