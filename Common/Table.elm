@@ -226,21 +226,21 @@ viewPagination state toMsg =
         optionLength =
             viewSelect state.rowsPerPage
     in
-    div
-        [ class "detailsEntitlementToolbarElement", id "searchResultsTable_length" ]
-        [ label []
-            [ text "Show "
-            , select [ id "pageLengthSelect", Events.onInput (\t -> toMsg { state | rowsPerPage = pageSelect t }) ]
-                [ option
-                    [ value "50", selected (optionLength == "50") ]
-                    [ text "50" ]
-                , option [ value "100", selected (optionLength == "100") ] [ text "100" ]
-                , option [ value "150", selected (optionLength == "150") ] [ text "150" ]
-                , option [ value "200", selected (optionLength == "200") ] [ text "200" ]
-                , option [ value "-1", selected (optionLength == "-1") ] [ text "All" ]
+        div
+            [ class "detailsEntitlementToolbarElement", id "searchResultsTable_length" ]
+            [ label []
+                [ text "Show "
+                , select [ id "pageLengthSelect", Events.onInput (\t -> toMsg { state | rowsPerPage = pageSelect t }) ]
+                    [ option
+                        [ value "50", selected (optionLength == "50") ]
+                        [ text "50" ]
+                    , option [ value "100", selected (optionLength == "100") ] [ text "100" ]
+                    , option [ value "150", selected (optionLength == "150") ] [ text "150" ]
+                    , option [ value "200", selected (optionLength == "200") ] [ text "200" ]
+                    , option [ value "-1", selected (optionLength == "-1") ] [ text "All" ]
+                    ]
                 ]
             ]
-        ]
 
 
 view : State -> List data -> Config data msg -> Html msg
@@ -265,29 +265,33 @@ view state rows config =
         optionLength =
             viewSelect state.rowsPerPage
     in
-    div [ id (config.domTableId ++ "_wrapper"), class "dataTables_wrapper" ]
-        [ div [ class "top" ]
-            config.toolbar
-        , table
-            [ cellspacing "0"
-            , cellpadding "0"
-            , border "0"
-            , class "display dataTable no-footer"
-            , id config.domTableId
-            , style [ ( "width", "100%" ) ]
-            ]
-            [ thead [ id (config.domTableId ++ "Header") ]
-                [ tr [] (List.map (viewTh state config) config.columns)
+        div [ id (config.domTableId ++ "_wrapper"), class "dataTables_wrapper" ]
+            [ div [ class "top" ]
+                (if List.length rows == 0 then
+                    []
+                 else
+                    config.toolbar
+                )
+            , table
+                [ cellspacing "0"
+                , cellpadding "0"
+                , border "0"
+                , class "display dataTable no-footer"
+                , id config.domTableId
+                , style [ ( "width", "100%" ) ]
                 ]
-            , tbody []
-                (viewTr state filteredRows config)
+                [ thead [ id (config.domTableId ++ "Header") ]
+                    [ tr [] (List.map (viewTh state config) config.columns)
+                    ]
+                , tbody []
+                    (viewTr state filteredRows config)
+                ]
+            , div [ class "bottom" ]
+                [ div [ class "dataTables_info", id "searchResultsTable_info" ] [ text (pagerText state totalRows) ]
+                , pagingView state totalRows filteredRows config.toMsg
+                ]
+            , div [ class "clear" ] []
             ]
-        , div [ class "bottom" ]
-            [ div [ class "dataTables_info", id "searchResultsTable_info" ] [ text (pagerText state totalRows) ]
-            , pagingView state totalRows filteredRows config.toMsg
-            ]
-        , div [ class "clear" ] []
-        ]
 
 
 viewTr : State -> List data -> Config data msg -> List (Html msg)
@@ -325,19 +329,19 @@ viewTr state rows config =
             else
                 List.length config.columns
     in
-    if List.length rows == 0 then
-        [ tr [ class "odd" ]
-            [ td
-                [ class "dataTables_empty"
-                , colspan columnCount
-                ]
-                [ text "No data available in table" ]
+        if List.length rows == 0 then
+            [ tr [ class "odd" ]
+                [ td
+                    [ class "dataTables_empty"
+                    , colspan columnCount
+                    ]
+                    [ text "No data available in table" ]
 
-            --<td valign="top" colspan="5" class="dataTables_empty">No data available in table</td>
+                --<td valign="top" colspan="5" class="dataTables_empty">No data available in table</td>
+                ]
             ]
-        ]
-    else
-        List.indexedMap standardTr rows
+        else
+            List.indexedMap standardTr rows
 
 
 columnStyle : { data | columnStyle : ColumnStyle } -> Html.Attribute msg
@@ -368,14 +372,14 @@ viewTh state config column =
         sortClick =
             Events.onClick (config.toMsg { state | sortAscending = not state.sortAscending, sortField = column.columnId })
     in
-    th
-        [ thClass
-        , sortClick
-        , columnStyle column
-        , rowspan 1
-        , colspan 1
-        ]
-        [ column.header ]
+        th
+            [ thClass
+            , sortClick
+            , columnStyle column
+            , rowspan 1
+            , colspan 1
+            ]
+            [ column.header ]
 
 
 viewTd : State -> data -> Config data msg -> Column data msg -> Html msg
@@ -442,7 +446,7 @@ setPagingState state totalRows toMsg page =
                 Last ->
                     lastIndex
     in
-    Events.onClick (toMsg { state | pageIndex = newIndex })
+        Events.onClick (toMsg { state | pageIndex = newIndex })
 
 
 pagerText : State -> Int -> String
@@ -470,12 +474,12 @@ pagerText state totalRows =
             else
                 (state.pageIndex + 1) * t
     in
-    case state.rowsPerPage of
-        Exactly t ->
-            "Showing " ++ toString (state.pageIndex * t + 1) ++ " to " ++ toString (totalPageItems t) ++ " of " ++ totalItemsText ++ " entries"
+        case state.rowsPerPage of
+            Exactly t ->
+                "Showing " ++ toString (state.pageIndex * t + 1) ++ " to " ++ toString (totalPageItems t) ++ " of " ++ totalItemsText ++ " entries"
 
-        All ->
-            "Showing " ++ currentPageText ++ " to " ++ totalItemsText ++ " of " ++ totalPagesText ++ " entries"
+            All ->
+                "Showing " ++ currentPageText ++ " to " ++ totalItemsText ++ " of " ++ totalPagesText ++ " entries"
 
 
 pagingView : State -> Int -> List data -> (State -> msg) -> Html msg
@@ -500,11 +504,11 @@ pagingView state totalRows rows toMsg =
                     else
                         "paginate_button"
             in
-            a
-                [ class activeOrNotText
-                , pagingStateClick (Index pageIndex)
-                ]
-                [ text (toString (pageIndex + 1)) ]
+                a
+                    [ class activeOrNotText
+                    , pagingStateClick (Index pageIndex)
+                    ]
+                    [ text (toString (pageIndex + 1)) ]
 
         rng =
             List.range 0 lastIndex
@@ -536,13 +540,13 @@ pagingView state totalRows rows toMsg =
             else
                 "paginate_button last disabled"
     in
-    div [ class "dataTables_paginate paging_full_numbers" ]
-        [ a [ class firstPageClass, pagingStateClick First ] [ text "First" ]
-        , a [ class leftPageClass, pagingStateClick Previous ] [ text "Previous" ]
-        , span [] rng
-        , a [ class rightPageClass, pagingStateClick Next ] [ text "Next" ]
-        , a [ class lastPageClass, pagingStateClick Last ] [ text "Last" ]
-        ]
+        div [ class "dataTables_paginate paging_full_numbers" ]
+            [ a [ class firstPageClass, pagingStateClick First ] [ text "First" ]
+            , a [ class leftPageClass, pagingStateClick Previous ] [ text "Previous" ]
+            , span [] rng
+            , a [ class rightPageClass, pagingStateClick Next ] [ text "Next" ]
+            , a [ class lastPageClass, pagingStateClick Last ] [ text "Last" ]
+            ]
 
 
 

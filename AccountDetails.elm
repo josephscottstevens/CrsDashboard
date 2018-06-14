@@ -39,6 +39,18 @@ trRow labelText valueText =
         ]
 
 
+isAccountActive : Bool -> Html msg
+isAccountActive active =
+    if active then
+        span [ style [ ( "font-weight", "bold" ), ( "color", "green" ), ( "font-size", "13px" ) ] ]
+            [ text "Active"
+            ]
+    else
+        span [ style [ ( "font-weight", "bold" ), ( "color", "red" ), ( "font-size", "13px" ) ] ]
+            [ text "Inactive"
+            ]
+
+
 view : Model -> Company -> Html Msg
 view model accountDetails =
     table
@@ -54,24 +66,23 @@ view model accountDetails =
                     [ text accountDetails.company
                     , span [ style [ ( "padding-left", "1%" ), ( "font-weight", "normal" ), ( "font-size", "12px" ), ( "color", "black" ) ] ]
                         [ text "( "
-                        , span [ style [ ( "font-weight", "bold" ), ( "color", "green" ), ( "font-size", "13px" ) ] ]
-                            [ text "Active"
-                            ]
+                        , isAccountActive accountDetails.active
+                        , text " )"
                         ]
                     ]
-                , trRow "Account Id" (toString accountDetails.company_id)
-                , trRow "Status" accountDetails.status
-                , trRow "Sales Rep" accountDetails.salesperson
-                , trRow "Type" accountDetails.type_
-                , trRow "Subscription" accountDetails.subscription
-                , trRow "Vote" accountDetails.vote
-                , trRow "Total Payment" ("$" ++ toString accountDetails.totalPayments)
-                , tr []
-                    [ td [ tdStyle ] [ text "Active Products Purchased" ]
-                    ]
-                , tr []
-                    [ td [ tdStyle ] [ text accountDetails.activeProductsPurchased ]
-                    ]
+                ]
+            , trRow "Account Id" (toString accountDetails.company_id)
+            , trRow "Status" accountDetails.status
+            , trRow "Sales Rep" accountDetails.salesperson
+            , trRow "Type" accountDetails.type_
+            , trRow "Subscription" accountDetails.subscription
+            , trRow "Vote" accountDetails.vote
+            , trRow "Total Payment" ("$" ++ toString accountDetails.totalPayments)
+            , tr []
+                [ td [ tdStyle ] [ text "Active Products Purchased" ]
+                ]
+            , tr []
+                [ td [ tdStyle ] [ text accountDetails.activeProductsPurchased ]
                 ]
             ]
         ]

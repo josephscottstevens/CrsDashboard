@@ -37,7 +37,7 @@ searchHelper model row =
         rowText =
             String.toLower (toString row)
     in
-    String.contains searchText rowText
+        String.contains searchText rowText
 
 
 view : Model -> List Contents -> Html Msg
@@ -48,9 +48,9 @@ view model rows =
                 |> List.filter (inactiveHelper model)
                 |> List.filter (searchHelper model)
     in
-    div []
-        [ Table.view model.tableState filteredRows (gridConfig model)
-        ]
+        div []
+            [ Table.view model.tableState filteredRows (gridConfig model)
+            ]
 
 
 type Msg
@@ -96,16 +96,6 @@ codeHelper row =
         text row.contentKey
 
 
-codeColumn : Table.Column Contents Msg
-codeColumn =
-    { header = text "Code"
-    , viewData = codeHelper
-    , columnStyle = CustomStyle [ ( "width", "1%" ), ( "border-right", "1px solid black" ) ]
-    , sorter = Table.IncOrDec (List.sortBy .contentKey)
-    , columnId = "code"
-    }
-
-
 statusHelper : Contents -> String
 statusHelper row =
     if row.contentActive then
@@ -116,8 +106,7 @@ statusHelper row =
 
 columns : Model -> List (Table.Column Contents Msg)
 columns model =
-    [ codeColumn
-    , Table.stringColumn "Content Key" .contentKey NoStyle
+    [ Table.stringColumn "Content Key" .contentKey NoStyle
     , Table.stringColumn "Title" .title NoStyle
     , Table.stringColumn "Format" .defaultFormat NoStyle
     , Table.stringColumn "Schedule" .schedule NoStyle

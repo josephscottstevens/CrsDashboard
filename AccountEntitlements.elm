@@ -11,7 +11,7 @@ import Html.Events exposing (onClick, onInput)
 port openContactItem : String -> Cmd msg
 
 
-port excelExport : List (List String) -> Cmd msg
+port excelExport : ( List (List String), String ) -> Cmd msg
 
 
 subscriptions : Model -> Sub Msg
@@ -27,8 +27,8 @@ type alias Model =
     }
 
 
-view : Model -> List Contents -> List Clients -> Html Msg
-view model rows clients =
+view : Model -> List Contents -> List Clients -> Company -> Html Msg
+view model rows clients company =
     let
         filteredRows =
             List.filter
@@ -40,9 +40,9 @@ view model rows clients =
                 )
                 rows
     in
-    div []
-        [ Table.view model.tableState filteredRows (gridConfig model rows clients)
-        ]
+        div []
+            [ Table.view model.tableState filteredRows (gridConfig model rows clients company)
+            ]
 
 
 type Msg
@@ -51,7 +51,7 @@ type Msg
     | ToggleShowInactive
     | OpenItem String
     | OpenContactItem String
-    | ExcelExport (List (List String))
+    | ExcelExport (List (List String)) String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -82,9 +82,9 @@ update msg model =
             , openContactItem str
             )
 
-        ExcelExport items ->
+        ExcelExport items company ->
             ( model
-            , excelExport items
+            , excelExport ( items, company )
             )
 
 
@@ -103,7 +103,7 @@ filterColumns model items =
         filterHelper t =
             contains t && t.client_active == True
     in
-    List.filter filterHelper items
+        List.filter filterHelper items
 
 
 formatClients : Clients -> String
@@ -213,8 +213,8 @@ sortMaybeString t =
         t
 
 
-gridConfig : Model -> List Contents -> List Clients -> Table.Config Contents Msg
-gridConfig model rows clients =
+gridConfig : Model -> List Contents -> List Clients -> Company -> Table.Config Contents Msg
+gridConfig model rows clients company =
     { domTableId = "searchResultsTable"
     , toolbar =
         [ Table.viewPagination model.tableState SetTableState
@@ -230,7 +230,7 @@ gridConfig model rows clients =
         , div [ class "detailsEntitlementToolbarElementLeft" ]
             [ label [] [ text "" ]
             , if model.showExportBtnToggle then
-                button [ onClick (ExcelExport (excelExportData model rows clients)) ] [ text "Export To Excel" ]
+                button [ onClick (ExcelExport (excelExportData model rows clients) company.company) ] [ text "Export To Excel" ]
               else
                 text ""
             ]

@@ -23,6 +23,7 @@ type alias Company =
     , vote : String
     , totalPayments : Int
     , activeProductsPurchased : String
+    , active : Bool
     }
 
 
@@ -74,6 +75,7 @@ decodeCompanyListItem =
         |> Pipeline.required "Vote_Schedule__c" decodeString
         |> Pipeline.required "Annual_Billed__C" Decode.int
         |> Pipeline.required "Active_Licensed_Products__c" decodeString
+        |> Pipeline.required "active" Decode.bool
 
 
 decodeCompanyList : Decode.Decoder (List Company)

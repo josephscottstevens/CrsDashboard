@@ -89,20 +89,18 @@ type Page
 
 view : Model -> Html Msg
 view model =
-    div [ class "showAccountDetails" ]
-        [ table [ id "account-tabs", style [ ( "width", "100%" ) ], class "ui-tabs ui-corner-all ui-widget ui-widget-content" ]
-            [ tbody []
-                [ div [ id "account-tabs" ]
-                    [ ul [ id "detailsTabList", role "tablist", class "ui-tabs-nav ui-corner-all ui-helper-reset ui-helper-clearfix ui-widget-header" ]
-                        (List.indexedMap (\idx t -> viewTab (getCurrentTab model.page) idx t) tabs)
-                    , div
-                        [ id (getTabContentId (getCurrentTab model.page) ++ "-fragment")
-                        , style [ ( "font-family", "Arial" ), ( "font-size", "12pt" ), ( "height", "100%" ), ( "overflow", "auto" ) ]
-                        , class "ui-tabs-panel ui-corner-bottom ui-widget-content"
-                        , ariaHidden False
-                        ]
-                        [ viewPage model ]
+    table [ id "account-tabs", style [ ( "width", "100%" ) ], class "ui-tabs ui-corner-all ui-widget ui-widget-content" ]
+        [ tbody []
+            [ div [ id "account-tabs" ]
+                [ ul [ id "detailsTabList", role "tablist", class "ui-tabs-nav ui-corner-all ui-helper-reset ui-helper-clearfix ui-widget-header" ]
+                    (List.indexedMap (\idx t -> viewTab (getCurrentTab model.page) idx t) tabs)
+                , div
+                    [ id (getTabContentId (getCurrentTab model.page) ++ "-fragment")
+                    , style [ ( "font-family", "Arial" ), ( "font-size", "12pt" ), ( "height", "100%" ), ( "overflow", "auto" ) ]
+                    , class "ui-tabs-panel ui-corner-bottom ui-widget-content"
+                    , ariaHidden False
                     ]
+                    [ viewPage model ]
                 ]
             ]
         ]
@@ -139,9 +137,9 @@ viewPage model =
                     text ""
 
         AccountEntitlements subModel ->
-            case ( model.contents, model.clients ) of
-                ( Just contents, Just clients ) ->
-                    Html.map AccountEntitlementsMsg (AccountEntitlements.view subModel contents clients)
+            case ( model.contents, model.clients, model.company ) of
+                ( Just contents, Just clients, Just company ) ->
+                    Html.map AccountEntitlementsMsg (AccountEntitlements.view subModel contents clients company)
 
                 _ ->
                     text ""
@@ -189,80 +187,80 @@ updatePage page msg model =
                 ( newModel, newCmd ) =
                     subUpdate subMsg subModel
             in
-            { model | page = toModel newModel } ! [ Cmd.map toMsg newCmd ]
+                { model | page = toModel newModel } ! [ Cmd.map toMsg newCmd ]
     in
-    case ( msg, page ) of
-        ( OpenPage pageStr, _ ) ->
-            ( { model | page = getPage model.flags pageStr }, Cmd.none )
+        case ( msg, page ) of
+            ( OpenPage pageStr, _ ) ->
+                ( { model | page = getPage model.flags pageStr }, Cmd.none )
 
-        ( Search accountId, _ ) ->
-            ( { model | company = Nothing, clients = Nothing, contents = Nothing, projects = Nothing }
-            , Cmd.batch
-                [ postRequest ("lookupAccountDetails.do?accountId=" ++ accountId) decodeCompany
-                    |> Http.send LoadCompany
-                , postRequest ("lookupAccountContacts.do?accountId=" ++ accountId) decodeClients
-                    |> Http.send LoadClients
-                , postRequest ("lookupAccountContents.do?accountId=" ++ accountId) decodeContents
-                    |> Http.send LoadContents
-                , postRequest ("lookupAccountProjects.do?accountId=" ++ accountId) decodeProjects
-                    |> Http.send LoadProjects
-                ]
-            )
+            ( Search accountId, _ ) ->
+                ( { model | company = Nothing, clients = Nothing, contents = Nothing, projects = Nothing }
+                , Cmd.batch
+                    [ postRequest ("lookupAccountDetails.do?accountId=" ++ accountId) decodeCompany
+                        |> Http.send LoadCompany
+                    , postRequest ("lookupAccountContacts.do?accountId=" ++ accountId) decodeClients
+                        |> Http.send LoadClients
+                    , postRequest ("lookupAccountContents.do?accountId=" ++ accountId) decodeContents
+                        |> Http.send LoadContents
+                    , postRequest ("lookupAccountProjects.do?accountId=" ++ accountId) decodeProjects
+                        |> Http.send LoadProjects
+                    ]
+                )
 
-        ( LoadCompany response, _ ) ->
-            case response of
-                Ok companies ->
-                    case List.head companies of
-                        Just company ->
-                            ( { model | company = Just company }, Cmd.none )
+            ( LoadCompany response, _ ) ->
+                case response of
+                    Ok companies ->
+                        case List.head companies of
+                            Just company ->
+                                ( { model | company = Just company }, Cmd.none )
 
-                        Nothing ->
-                            ( model, showError "There was an error getting details for the company." )
+                            Nothing ->
+                                ( model, showError "There was an error getting details for the company." )
 
-                Err t ->
-                    ( model, showError (toString t) )
+                    Err t ->
+                        ( model, showError (toString t) )
 
-        ( LoadClients response, _ ) ->
-            case response of
-                Ok clients ->
-                    ( { model | clients = Just clients }, Cmd.none )
+            ( LoadClients response, _ ) ->
+                case response of
+                    Ok clients ->
+                        ( { model | clients = Just clients }, Cmd.none )
 
-                Err t ->
-                    ( model, showError (toString t) )
+                    Err t ->
+                        ( model, showError (toString t) )
 
-        ( LoadContents response, _ ) ->
-            case response of
-                Ok contents ->
-                    ( { model | contents = Just contents }, Cmd.none )
+            ( LoadContents response, _ ) ->
+                case response of
+                    Ok contents ->
+                        ( { model | contents = Just contents }, Cmd.none )
 
-                Err t ->
-                    ( model, showError (toString t) )
+                    Err t ->
+                        ( model, showError (toString t) )
 
-        ( LoadProjects response, _ ) ->
-            case response of
-                Ok projects ->
-                    ( { model | projects = Just projects }, Cmd.none )
+            ( LoadProjects response, _ ) ->
+                case response of
+                    Ok projects ->
+                        ( { model | projects = Just projects }, Cmd.none )
 
-                Err t ->
-                    ( model, showError (toString t) )
+                    Err t ->
+                        ( model, showError (toString t) )
 
-        ( AccountDetailsMsg subMsg, AccountDetails subModel ) ->
-            toPage AccountDetails AccountDetailsMsg AccountDetails.update subMsg subModel
+            ( AccountDetailsMsg subMsg, AccountDetails subModel ) ->
+                toPage AccountDetails AccountDetailsMsg AccountDetails.update subMsg subModel
 
-        ( AccountContactsMsg subMsg, AccountContacts subModel ) ->
-            toPage AccountContacts AccountContactsMsg AccountContacts.update subMsg subModel
+            ( AccountContactsMsg subMsg, AccountContacts subModel ) ->
+                toPage AccountContacts AccountContactsMsg AccountContacts.update subMsg subModel
 
-        ( AccountContentsMsg subMsg, AccountContents subModel ) ->
-            toPage AccountContents AccountContentsMsg AccountContents.update subMsg subModel
+            ( AccountContentsMsg subMsg, AccountContents subModel ) ->
+                toPage AccountContents AccountContentsMsg AccountContents.update subMsg subModel
 
-        ( AccountEntitlementsMsg subMsg, AccountEntitlements subModel ) ->
-            toPage AccountEntitlements AccountEntitlementsMsg AccountEntitlements.update subMsg subModel
+            ( AccountEntitlementsMsg subMsg, AccountEntitlements subModel ) ->
+                toPage AccountEntitlements AccountEntitlementsMsg AccountEntitlements.update subMsg subModel
 
-        ( AccountProjectsMsg subMsg, AccountProjects subModel ) ->
-            toPage AccountProjects AccountProjectsMsg AccountProjects.update subMsg subModel
+            ( AccountProjectsMsg subMsg, AccountProjects subModel ) ->
+                toPage AccountProjects AccountProjectsMsg AccountProjects.update subMsg subModel
 
-        _ ->
-            ( model, Cmd.none )
+            _ ->
+                ( model, Cmd.none )
 
 
 main : Program Flags Model Msg
@@ -412,28 +410,28 @@ viewTab activeTab idx tab =
             else
                 ""
     in
-    li
-        [ id idStr
-        , role "tab"
-        , tabindex 0
-        , class ("ui-tabs-tab ui-corner-top ui-state-default ui-tab " ++ activeClass)
-        , ariaControls hrefText
-        , ariaLabelledby hrefId
-        , ariaSelected isActive
-        , ariaExpanded isActive
-        , style closeDetailsStyle
-        ]
-        [ a
-            [ href ("#" ++ hrefText)
-            , tabindex -1
-            , role "presentation"
-            , class "ui-tabs-anchor"
-            , id hrefId
-            , onClick (OpenPage tab.name)
+        li
+            [ id idStr
+            , role "tab"
+            , tabindex 0
+            , class ("ui-tabs-tab ui-corner-top ui-state-default ui-tab " ++ activeClass)
+            , ariaControls hrefText
+            , ariaLabelledby hrefId
+            , ariaSelected isActive
+            , ariaExpanded isActive
+            , style closeDetailsStyle
             ]
-            [ span [] [ text tab.displayText ]
+            [ a
+                [ href ("#" ++ hrefText)
+                , tabindex -1
+                , role "presentation"
+                , class "ui-tabs-anchor"
+                , id hrefId
+                , onClick (OpenPage tab.name)
+                ]
+                [ span [] [ text tab.displayText ]
+                ]
             ]
-        ]
 
 
 postRequestWithFlags : Flags -> String -> Decode.Decoder a -> Http.Request a
