@@ -8,9 +8,6 @@ import Html.Attributes exposing (attribute, checked, class, classList, colspan, 
 import Html.Events exposing (onClick, onInput)
 
 
-port openContactItem : String -> Cmd msg
-
-
 port excelExport : ( List (List String), String ) -> Cmd msg
 
 
@@ -79,7 +76,7 @@ update msg model =
 
         OpenContactItem str ->
             ( model
-            , openContactItem str
+            , Functions.openContactItem str
             )
 
         ExcelExport items company ->

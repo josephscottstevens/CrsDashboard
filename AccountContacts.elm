@@ -58,6 +58,7 @@ type Msg
     | UpdateFilter String
     | ToggleShowInactive
     | OpenItem String
+    | OpenContactItem String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -83,6 +84,11 @@ update msg model =
             , Functions.openItem str
             )
 
+        OpenContactItem str ->
+            ( model
+            , Functions.openContactItem str
+            )
+
 
 statusHelper : Clients -> String
 statusHelper row =
@@ -92,9 +98,33 @@ statusHelper row =
         "Inactive"
 
 
+formatClients : Clients -> String
+formatClients customer =
+    customer.first_name ++ " " ++ customer.last_name ++ customer.code
+
+
+customerDataToHtml : Clients -> Html Msg
+customerDataToHtml customer =
+    div []
+        [ text (customer.first_name ++ " " ++ customer.last_name)
+        , br [] []
+        , a
+            [ href "javascript:void(0)"
+            , onClick (OpenContactItem customer.code)
+            ]
+            [ text (" (" ++ customer.code ++ ")") ]
+        ]
+
+
 columns : Model -> List (Table.Column Clients Msg)
 columns model =
     [ Table.stringColumn "Code" .code NoStyle
+    , { header = text "Some Header Thingy"
+      , viewData = customerDataToHtml
+      , columnStyle = CustomStyle [ ( "width", "1%" ), ( "text-align", "center" ) ]
+      , sorter = Table.IncOrDec (List.sortBy formatClients)
+      , columnId = "Some Column ID thingy"
+      }
     , Table.stringColumn "Contact" (\t -> t.first_name ++ " " ++ t.last_name) NoStyle
     , Table.stringColumn "Account" .company NoStyle
     , Table.stringColumn "Active Status" statusHelper NoStyle

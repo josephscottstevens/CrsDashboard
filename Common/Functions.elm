@@ -13,6 +13,9 @@ import Json.Encode as Encode
 port openItem : String -> Cmd msg
 
 
+port openContactItem : String -> Cmd msg
+
+
 groupBy : (a -> comparable) -> List a -> List ( comparable, List a )
 groupBy fun items =
     Dict.toList (groupByDict fun items)
@@ -32,7 +35,7 @@ groupByDict fun =
         foldF e =
             Dict.update (fun e) (add2Maybe e)
     in
-    List.foldl foldF Dict.empty
+        List.foldl foldF Dict.empty
 
 
 defaultString : Maybe String -> String
