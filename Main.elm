@@ -298,13 +298,10 @@ getCurrentTab page =
             Nothing
 
 
-isTabLoading : Model -> Bool
-isTabLoading model =
-    case model.page of
-        NotLoaded ->
-            False
-
-        AccountDetails subModel ->
+isTabLoading : Model -> Maybe Tab -> Bool
+isTabLoading model activeTab =
+    case getTabContentId activeTab of
+        "accountDetails" ->
             case model.company of
                 Just company ->
                     False
@@ -312,7 +309,7 @@ isTabLoading model =
                 Nothing ->
                     True
 
-        AccountContacts subModel ->
+        "accountContacts" ->
             case model.clients of
                 Just clients ->
                     False
@@ -320,7 +317,7 @@ isTabLoading model =
                 Nothing ->
                     True
 
-        AccountContents subModel ->
+        "accountContents" ->
             case model.contents of
                 Just contents ->
                     False
@@ -328,7 +325,7 @@ isTabLoading model =
                 Nothing ->
                     True
 
-        AccountEntitlements subModel ->
+        "accountEntitlements" ->
             case ( model.contents, model.clients, model.company ) of
                 ( Just contents, Just clients, Just company ) ->
                     False
@@ -336,7 +333,7 @@ isTabLoading model =
                 _ ->
                     True
 
-        AccountProjects subModel ->
+        "accountProjects" ->
             case model.projects of
                 Just projects ->
                     False
@@ -344,8 +341,8 @@ isTabLoading model =
                 Nothing ->
                     True
 
-        Error _ ->
-            False
+        _ ->
+            Debug.crash "invalid tab passed in, or missing case"
 
 
 getTabContentId : Maybe Tab -> String
@@ -482,7 +479,7 @@ viewTab model idx tab =
                 , id hrefId
                 , onClick (OpenPage tab.name)
                 ]
-                [ if isTabLoading model then
+                [ if isTabLoading model activeTab then
                     img [ src "images/busy.gif" ] []
                   else
                     span [] [ text tab.displayText ]
