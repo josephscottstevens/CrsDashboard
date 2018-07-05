@@ -8,8 +8,8 @@ import AccountProjects exposing (Model, emptyModel, init, subscriptions, update,
 import Common.Functions exposing (..)
 import Common.Html exposing (ariaControls, ariaExpanded, ariaHidden, ariaLabelledby, ariaSelected, role)
 import Common.Types exposing (..)
-import Html exposing (Html, a, br, button, div, h1, input, label, li, span, table, tbody, td, text, tr, ul)
-import Html.Attributes exposing (class, href, id, style, tabindex)
+import Html exposing (Html, a, br, button, div, h1, input, label, li, span, table, tbody, td, text, tr, ul, img)
+import Html.Attributes exposing (class, href, id, style, tabindex, src)
 import Html.Events exposing (onClick)
 import Http
 import Json.Decode as Decode
@@ -93,7 +93,7 @@ view model =
         [ tbody []
             [ div [ id "account-tabs" ]
                 [ ul [ id "detailsTabList", role "tablist", class "ui-tabs-nav ui-corner-all ui-helper-reset ui-helper-clearfix ui-widget-header" ]
-                    (List.indexedMap (\idx t -> viewTab (getCurrentTab model.page) idx t) tabs)
+                    (List.indexedMap (\idx t -> viewTab model idx t) tabs)
                 , div
                     [ id (getTabContentId (getCurrentTab model.page) ++ "-fragment")
                     , style [ ( "font-family", "Arial" ), ( "font-size", "12pt" ), ( "height", "100%" ), ( "overflow", "auto" ) ]
@@ -298,6 +298,56 @@ getCurrentTab page =
             Nothing
 
 
+isTabLoading : Model -> Bool
+isTabLoading model =
+    case model.page of
+        NotLoaded ->
+            False
+
+        AccountDetails subModel ->
+            case model.company of
+                Just company ->
+                    False
+
+                Nothing ->
+                    True
+
+        AccountContacts subModel ->
+            case model.clients of
+                Just clients ->
+                    False
+
+                Nothing ->
+                    True
+
+        AccountContents subModel ->
+            case model.contents of
+                Just contents ->
+                    False
+
+                Nothing ->
+                    True
+
+        AccountEntitlements subModel ->
+            case ( model.contents, model.clients, model.company ) of
+                ( Just contents, Just clients, Just company ) ->
+                    False
+
+                _ ->
+                    True
+
+        AccountProjects subModel ->
+            case model.projects of
+                Just projects ->
+                    False
+
+                Nothing ->
+                    True
+
+        Error _ ->
+            False
+
+
 getTabContentId : Maybe Tab -> String
 getTabContentId maybeTab =
     case maybeTab of
@@ -380,9 +430,12 @@ tabs =
     ]
 
 
-viewTab : Maybe Tab -> Int -> Tab -> Html Msg
-viewTab activeTab idx tab =
+viewTab : Model -> Int -> Tab -> Html Msg
+viewTab model idx tab =
     let
+        activeTab =
+            getCurrentTab model.page
+
         hrefText =
             tab.name ++ "-fragment"
 
@@ -429,7 +482,10 @@ viewTab activeTab idx tab =
                 , id hrefId
                 , onClick (OpenPage tab.name)
                 ]
-                [ span [] [ text tab.displayText ]
+                [ if isTabLoading model then
+                    img [ src "images/busy.gif" ] []
+                  else
+                    span [] [ text tab.displayText ]
                 ]
             ]
 
