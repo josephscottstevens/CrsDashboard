@@ -298,9 +298,9 @@ getCurrentTab page =
             Nothing
 
 
-isTabLoading : Model -> Maybe Tab -> Bool
-isTabLoading model activeTab =
-    case getTabContentId activeTab of
+isTabLoading : Model -> Tab -> Bool
+isTabLoading model tab =
+    case getTabContentId (Just tab) of
         "accountDetails" ->
             case model.company of
                 Just company ->
@@ -479,7 +479,7 @@ viewTab model idx tab =
                 , id hrefId
                 , onClick (OpenPage tab.name)
                 ]
-                [ if isTabLoading model activeTab then
+                [ if isTabLoading model tab then
                     img [ src "images/busy.gif" ] []
                   else
                     span [] [ text tab.displayText ]
