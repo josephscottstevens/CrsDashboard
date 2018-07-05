@@ -341,6 +341,9 @@ isTabLoading model tab =
                 Nothing ->
                     True
 
+        "closeDetails" ->
+            False
+
         _ ->
             Debug.crash "invalid tab passed in, or missing case"
 
