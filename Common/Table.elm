@@ -227,7 +227,7 @@ viewPagination state toMsg =
             viewSelect state.rowsPerPage
     in
         div
-            [ class "detailsEntitlementToolbarElement", id "searchResultsTable_length" ]
+            [ class "detailsEntitlementToolbar", id "searchResultsTable_length" ]
             [ label []
                 [ text "Show "
                 , select [ id "pageLengthSelect", Events.onInput (\t -> toMsg { state | rowsPerPage = pageSelect t }) ]

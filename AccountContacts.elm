@@ -37,7 +37,7 @@ searchHelper model row =
         rowText =
             String.toLower (toString row)
     in
-    String.contains searchText rowText
+        String.contains searchText rowText
 
 
 view : Model -> List Clients -> Html Msg
@@ -48,9 +48,9 @@ view model rows =
                 |> List.filter (inactiveHelper model)
                 |> List.filter (searchHelper model)
     in
-    div []
-        [ Table.view model.tableState filteredClientss (gridConfig model)
-        ]
+        div []
+            [ Table.view model.tableState filteredClientss (gridConfig model)
+            ]
 
 
 type Msg
@@ -106,7 +106,8 @@ gridConfig : Model -> Table.Config Clients Msg
 gridConfig model =
     { domTableId = "AccountEntitlementsTable"
     , toolbar =
-        [ div [ class "detailsEntitlementToolbarElementLeft" ]
+        -- First div should have class .detailsEntitlementToolbar
+        [ div [ class "detailsEntitlementToolbar" ]
             [ input [ type_ "checkbox", onClick ToggleShowInactive ] []
             , label [] [ text "Show Inactive Contacts" ]
             ]

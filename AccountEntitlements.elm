@@ -218,11 +218,6 @@ gridConfig model rows clients company =
     { domTableId = "searchResultsTable"
     , toolbar =
         [ Table.viewPagination model.tableState SetTableState
-
-        --div [ class "detailsEntitlementToolbarElementLeft" ]
-        --  [ input [ type_ "checkbox", onClick ToggleShowInactive ] []
-        --  , label [] [ text "Show Inactive Content" ]
-        --  ]
         , div [ class "detailsEntitlementToolbarElementLeft" ]
             [ label [] [ text "Contact Search " ]
             , input [ type_ "text", onInput UpdateFilter ] []

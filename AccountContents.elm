@@ -118,7 +118,8 @@ gridConfig : Model -> Table.Config Contents Msg
 gridConfig model =
     { domTableId = "AccountContentsTable"
     , toolbar =
-        [ div [ class "detailsEntitlementToolbarElementLeft" ]
+        -- First div should have class .detailsEntitlementToolbar
+        [ div [ class "detailsEntitlementToolbar" ]
             [ input [ type_ "checkbox", onClick ToggleShowInactive ] []
             , label [] [ text "Show Inactive Contents" ]
             ]

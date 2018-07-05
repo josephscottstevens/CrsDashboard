@@ -39,7 +39,7 @@ searchHelper model row =
         rowText =
             String.toLower (toString row)
     in
-    String.contains searchText rowText
+        String.contains searchText rowText
 
 
 view : Model -> List Projects -> Html Msg
@@ -50,9 +50,9 @@ view model rows =
                 --|> List.filter (inactiveHelper model)
                 |> List.filter (searchHelper model)
     in
-    div []
-        [ Table.view model.tableState filteredRows (gridConfig model)
-        ]
+        div []
+            [ Table.view model.tableState filteredRows (gridConfig model)
+            ]
 
 
 type Msg
@@ -106,11 +106,8 @@ gridConfig : Model -> Table.Config Projects Msg
 gridConfig model =
     { domTableId = "AccountProjectsTable"
     , toolbar =
-        -- [ div [ class "detailsEntitlementToolbarElementLeft" ]
-        --     [ input [ type_ "checkbox", onClick ToggleShowInactive ] []
-        --     , label [] [ text "Show Inactive Projects" ]
-        --     ] ,
-        [ div [ class "detailsEntitlementToolbarElementLeft" ]
+        -- First div should have class .detailsEntitlementToolbar
+        [ div [ class "dataTables_length" ]
             [ label [] [ text "Project Search " ]
             , input [ type_ "text", onInput UpdateFilter ] []
             ]
